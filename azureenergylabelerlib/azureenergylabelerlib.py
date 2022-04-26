@@ -1,0 +1,89 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# File: azureenergylabelerlib.py
+#
+# Copyright 2022 Sayantan Khanra
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+#  of this software and associated documentation files (the "Software"), to
+#  deal in the Software without restriction, including without limitation the
+#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+#  sell copies of the Software, and to permit persons to whom the Software is
+#  furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in
+#  all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+#  DEALINGS IN THE SOFTWARE.
+#
+
+"""
+Main code for azureenergylabelerlib.
+
+.. _Google Python Style Guide:
+   http://google.github.io/styleguide/pyguide.html
+
+"""
+from cachetools import cached, TTLCache
+from azure.identity import ClientSecretCredential
+from .configuration import (
+                            TENANT_THRESHOLDS,
+                            RESOURCE_GROUP_THRESHOLDS,
+                            DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS)
+
+import logging
+from .entities import DefenderForCloud, Tenant, Subscription, ResourceGroup
+
+__author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
+__docformat__ = '''google'''
+__date__ = '''22-04-2022'''
+__copyright__ = '''Copyright 2022, Sayantan Khanra'''
+__credits__ = ["Sayantan Khanra"]
+__license__ = '''MIT'''
+__maintainer__ = '''Sayantan Khanra'''
+__email__ = '''<skhanra@schubergphilis.com>'''
+__status__ = '''Development'''  # "Prototype", "Development", "Production".
+
+
+# This is the main prefix used for logging
+LOGGER_BASENAME = '''azureenergylabelerlib'''
+LOGGER = logging.getLogger(LOGGER_BASENAME)
+LOGGER.addHandler(logging.NullHandler())
+
+class EnergyLabeler:
+   """Labeling subscriptions based on findings and label configurations."""
+   def __init__(self,
+                tenant_id,
+                client_id,
+                client_secret,
+                frameworks=DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
+                tenant_thresholds=TENANT_THRESHOLDS,
+                resource_group_thresholds=RESOURCE_GROUP_THRESHOLDS,
+                allowed_subscription_ids=None,
+                denied_subscription_ids=None,
+                ):
+       self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
+       self._tenant_id = tenant_id
+       self._client_id = client_id
+       self.tenant_credentials = ClientSecretCredential(tenant_id, client_id, client_secret)
+       self.allowed_subscription_ids = allowed_subscription_ids
+       self.tenant = Tenant(credential=self.tenant_credentials, id=self._tenant_id)
+       self.defender_for_cloud = self._initialize_defender_for_cloud(credential=self.tenant_credentials)
+       self.frameworks = frameworks
+
+   def _initialize_defender_for_cloud(self, credential):
+       """Initialize defender for cloud."""
+       subscription_list = [subscription.subscription_id for subscription in
+                            self.tenant.subscriptions] if not self.allowed_subscription_ids else self.allowed_subscription_ids
+       return DefenderForCloud(credential, subscription_list)
+
+   @cached(cache=TTLCache(maxsize=150000, ttl=120))
+   def defender_for_cloud_findings(self):
+       """Defender for cloud findings."""
+       return self.defender_for_cloud.get_findings(frameworks=self.frameworks)
