@@ -47,6 +47,7 @@ from .validations import validate_allowed_denied_subscription_ids
 from .azureenergylabelerlibexceptions import (SubscriptionNotPartOfTenant,
                                               InvalidFrameworks)
 from .labels import (ResourceGroupEnergyLabel,
+                     TenantEnergyLabel,
                      SubscriptionEnergyLabelBasedOnResourceGroups,
                      SubscriptionEnergyLabelBasedOnFindings,
                      SubscriptionEnergyLabelAggregated)
@@ -132,8 +133,9 @@ class Tenant:
         self.subscription_thresholds = subscription_thresholds
         self.resource_group_thresholds = resource_group_thresholds
         subscription_ids = [subscription.id for subscription in self.subscriptions]
-        allowed_subscription_ids, denied_subscription_ids = validate_allowed_denied_subscription_ids(allowed_subscription_ids,
-                                                                                      denied_subscription_ids)
+        allowed_subscription_ids, denied_subscription_ids = validate_allowed_denied_subscription_ids(
+            allowed_subscription_ids,
+            denied_subscription_ids)
         self.allowed_subscription_ids = self._validate_tenant_subscription_ids(allowed_subscription_ids, subscription_ids)
         self.denied_subscription_ids = self._validate_tenant_subscription_ids(denied_subscription_ids, subscription_ids)
         self._subscriptions_to_be_labeled = None
@@ -171,14 +173,98 @@ class Tenant:
         Returns:
             The list of subscriptions based on the allowed list.
         """
-        return [subscription for subscription in self.subscriptions if subscription.id in self.allowed_subscriotions_ids]
+        return [subscription for subscription in self.subscriptions if subscription.id in self.allowed_subscription_ids]
 
-    def get_denied_subscriptions(self):
+    def get_not_denied_subscriptions(self):
         """Retrieves denied subscriptions based on an denied list.
         Returns:
             The list of subscriptions based on the denied list.
         """
-        return [subscription for subscription in self.subscriptions if subscription.id in self.denied_subscription_ids]
+        return [subscription for subscription in self.subscriptions if subscription.id not in self.denied_subscription_ids]
+
+    @property
+    def subscriptions_to_be_labeled(self):
+        """Subscriptions to be labeled according to the allow or deny list arguments.
+        Returns:
+            subscription (list): A list of subscriptions to be labeled.
+        """
+        if self._subscriptions_to_be_labeled is None:
+            if self.allowed_subscription_ids:
+                self._logger.debug(f'Working on allow list {self.allowed_subscription_ids}')
+                self._subscriptions_to_be_labeled = self.get_allowed_subscriptions()
+            elif self.denied_subscription_ids:
+                self._logger.debug(f'Working on deny list {self.denied_subscription_ids}')
+                self._subscriptions_to_be_labeled = self.get_not_denied_subscriptions()
+            else:
+                self._logger.debug('Working on all tenant subscriptions')
+                self._subscriptions_to_be_labeled = self.subscriptions
+        return self._subscriptions_to_be_labeled
+
+    def get_labeled_targeted_subscriptions(self, defender_for_cloud_findings):
+        """Labels the subscriptions based on the allow and deny list provided.
+        Args:
+            defender_for_cloud_findings: The findings for a Tenant.
+        Returns:
+            labeled_subscriptions (list): A list of Azure Subscriptions objects that have their labels calculated.
+        """
+        labeled_subscriptions = []
+        self._logger.debug('Calculating on defender for cloud findings')
+        dataframe_measurements = pd.DataFrame([finding.measurement_data for finding in defender_for_cloud_findings])
+        for subscription in self.subscriptions_to_be_labeled:
+            self._logger.debug(f'Calculating energy label for subscription {subscription.subscription_id}')
+            subscription.get_aggregated_energy_label(dataframe_measurements)
+            labeled_subscriptions.append(subscription)
+        return labeled_subscriptions
+
+    def get_energy_label_of_targeted_subscriptions(self, defender_for_cloud_findings):
+        """Get the energy label of the targeted subscriptions.
+        Args:
+            defender_for_cloud_findings: The findings from defender for cloud.
+        Returns:
+            energy_label (str): The energy label of the targeted subscriptions.
+        """
+        if self._targeted_subscriptions_energy_label is None:
+            labeled_subscriptions = self.get_labeled_targeted_subscriptions(defender_for_cloud_findings)
+            label_counter = Counter([subscription.get_aggregated_energy_label(defender_for_cloud_findings).label for subscription in labeled_subscriptions])
+            number_of_subscriptions = len(labeled_subscriptions)
+            self._logger.debug(f'Number of subscriptions calculated are {number_of_subscriptions}')
+            subscription_sums = []
+            labels = []
+            for threshold in self.thresholds:
+                label = threshold.get('label')
+                percentage = threshold.get('percentage')
+                labels.append(label)
+                subscription_sums.append(label_counter.get(label, 0))
+                self._logger.debug(f'Calculating for labels {labels} with threshold {percentage} '
+                                   f'and sums of {subscription_sums}')
+                if sum(subscription_sums) / number_of_subscriptions * 100 >= percentage:
+                    self._logger.debug(f'Found a match with label {label}')
+                    self._targeted_subscriptions_energy_label = SubscriptionEnergyLabelAggregated(label,
+                                                                                                  min(label_counter.keys()),
+                                                                                                  max(label_counter.keys()),
+                                                                                                  number_of_subscriptions)
+                    break
+            else:
+                self._logger.debug('Found no match with thresholds, using default worst label F.')
+                self._targeted_subscriptions_energy_label = SubscriptionEnergyLabelAggregated('F',
+                                                                                    min(label_counter.keys()),
+                                                                                    max(label_counter.keys()),
+                                                                                    number_of_subscriptions)
+        return self._targeted_subscriptions_energy_label
+
+    def get_energy_label(self, defender_for_cloud_findings):
+        """Calculates and returns the energy label of the Tenant.
+        Args:
+            defender_for_cloud_findings: The measurement data of all the findings for a tenant.
+        Returns:
+            energy_label (TenantEnergyLabel): The labeling object of the Tenant.
+        """
+        aggregate_label = self.get_energy_label_of_targeted_subscriptions(defender_for_cloud_findings)
+        coverage_percentage = len(self.subscriptions_to_be_labeled) / len(self.subscriptions) * 100
+        return TenantEnergyLabel(aggregate_label.label,
+                                 best_label=aggregate_label.best_label,
+                                 worst_label=aggregate_label.worst_label,
+                                 coverage=f'{coverage_percentage:.2f}%')
 
 
 class Subscription:
@@ -315,9 +401,9 @@ class Subscription:
         energy_labels.sort()
         final_energy_label = energy_labels[1]
         return SubscriptionEnergyLabelAggregated(final_energy_label,
-                                                 energy_label_based_on_resource_groups.resource_groups_measured,
-                                                 energy_label_based_on_resource_groups.label,
-                                                 energy_label_based_on_findings_in_subscription.label)
+                                                 energy_labels[0],
+                                                 energy_labels[1],
+                                                 energy_label_based_on_resource_groups.resource_groups_measured)
 
 
 class ResourceGroup:

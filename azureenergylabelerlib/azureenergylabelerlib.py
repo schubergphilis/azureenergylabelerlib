@@ -32,8 +32,7 @@ Main code for azureenergylabelerlib.
 """
 from cachetools import cached, TTLCache
 from azure.identity import ClientSecretCredential
-from .configuration import (
-                            TENANT_THRESHOLDS,
+from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS)
 
@@ -73,17 +72,60 @@ class EnergyLabeler:
        self._client_id = client_id
        self.tenant_credentials = ClientSecretCredential(tenant_id, client_id, client_secret)
        self.allowed_subscription_ids = allowed_subscription_ids
-       self.tenant = Tenant(credential=self.tenant_credentials, id=self._tenant_id)
-       self.defender_for_cloud = self._initialize_defender_for_cloud(credential=self.tenant_credentials)
-       self.frameworks = frameworks
+       self._tenant = Tenant(credential=self.tenant_credentials, id=self._tenant_id)
+       self._defender_for_cloud = self._initialize_defender_for_cloud(credential=self.tenant_credentials)
+       self._frameworks = frameworks
+       self._tenant_energy_label = None
+       self._labeled_subscriptions_energy_label = None
+       self._tenant_labeled_subscriptions = None
 
    def _initialize_defender_for_cloud(self, credential):
        """Initialize defender for cloud."""
        subscription_list = [subscription.subscription_id for subscription in
-                            self.tenant.subscriptions] if not self.allowed_subscription_ids else self.allowed_subscription_ids
+                            self._tenant.subscriptions] if not self.allowed_subscription_ids else self.allowed_subscription_ids
        return DefenderForCloud(credential, subscription_list)
 
+   @property
    @cached(cache=TTLCache(maxsize=150000, ttl=120))
    def defender_for_cloud_findings(self):
        """Defender for cloud findings."""
-       return self.defender_for_cloud.get_findings(frameworks=self.frameworks)
+       return self._defender_for_cloud.get_findings(frameworks=self._frameworks)
+
+   @property
+   def matching_frameworks(self):
+       """The frameworks provided to match the findings of."""
+       return self._frameworks
+
+   @property
+   def defender_for_cloud(self):
+       """Defender for cloud."""
+       return self._defender_for_cloud
+
+   @property
+   def tenant(self):
+       """Tenant."""
+       return self._tenant
+
+   @property
+   def tenant_energy_label(self):
+       """Energy label of the Azure Tenant."""
+       if self._tenant_energy_label is None:
+           self._logger.debug(f'Tenant subscriptions labeled are {len(self._tenant.subscriptions_to_be_labeled)}')
+           self._tenant_energy_label = self._tenant.get_energy_label(self.defender_for_cloud_findings)
+       return self._tenant_energy_label
+
+   @property
+   def labeled_subscriptions_energy_label(self):
+       """Energy label of the labeled subscriptions."""
+       if self._labeled_subscriptions_energy_label is None:
+           self._labeled_subscriptions_energy_label = self._tenant.get_energy_label_of_targeted_subscriptions(
+               self.defender_for_cloud_findings)
+       return self._labeled_subscriptions_energy_label
+
+   @property
+   def tenant_labeled_subscriptions(self):
+       """The tenant labeled subscription objects."""
+       if self._tenant_labeled_subscriptions is None:
+           self._tenant_labeled_subscriptions = self._tenant.get_labeled_targeted_subscriptions(
+               self.defender_for_cloud_findings)
+       return self._tenant_labeled_subscriptions

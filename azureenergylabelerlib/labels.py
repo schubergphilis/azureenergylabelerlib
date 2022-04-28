@@ -59,14 +59,10 @@ class AggregateEnergyLabel:
 
 
 @dataclass
-class SubscriptionEnergyLabelAggregated:
+class SubscriptionEnergyLabelAggregated(AggregateEnergyLabel):
     """Models an energy label averaging multiple resource groups."""
 
-    label: str
     resource_groups_measured: str
-    label_based_on_resource_groups: str
-    label_based_on_subscription_findings: str
-
 
 @dataclass
 class SubscriptionEnergyLabelBasedOnResourceGroups(AggregateEnergyLabel):
