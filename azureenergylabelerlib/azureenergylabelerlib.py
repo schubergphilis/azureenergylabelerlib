@@ -58,40 +58,43 @@ LOGGER_BASENAME = '''azureenergylabelerlib'''
 LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
 
-class EnergyLabeler:
+
+class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-attributes
     """Labeling subscriptions based on findings and label configurations."""
+
+    # pylint: disable=dangerous-default-value
     def __init__(self,
-                tenant_id,
-                client_id,
-                client_secret,
-                frameworks=DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
-                tenant_thresholds=TENANT_THRESHOLDS,
-                resource_group_thresholds=RESOURCE_GROUP_THRESHOLDS,
-                subscription_thresholds=SUBSCRIPTION_THRESHOLDS,
-                allowed_subscription_ids=None,
-                denied_subscription_ids=None,
-                ):
-       self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
-       self._tenant_id = tenant_id
-       self._client_id = client_id
-       self.resource_group_thresholds = resource_group_thresholds_schema.validate(resource_group_thresholds)
-       self.tenant_thresholds = tenant_thresholds_schema.validate(tenant_thresholds)
-       self.subscription_thresolds = subscription_thresholds_schema.validate(subscription_thresholds)
-       self.tenant_credentials = ClientSecretCredential(tenant_id, client_id, client_secret)
-       self.allowed_subscription_ids = allowed_subscription_ids
-       self.denied_subscription_ids = denied_subscription_ids
-       self._tenant = Tenant(credential=self.tenant_credentials,
-                             id=self._tenant_id,
-                             thresholds=self.tenant_thresholds,
-                             subscription_thresholds=self.subscription_thresolds,
-                             resource_group_thresholds=self.resource_group_thresholds,
-                             allowed_subscription_ids=self.allowed_subscription_ids,
-                             denied_subscription_ids=self.denied_subscription_ids)
-       self._defender_for_cloud = self._initialize_defender_for_cloud(credential=self.tenant_credentials)
-       self._frameworks = DefenderForCloud.validate_frameworks(frameworks)
-       self._tenant_energy_label = None
-       self._labeled_subscriptions_energy_label = None
-       self._tenant_labeled_subscriptions = None
+                 tenant_id,
+                 client_id,
+                 client_secret,
+                 frameworks=DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
+                 tenant_thresholds=TENANT_THRESHOLDS,
+                 resource_group_thresholds=RESOURCE_GROUP_THRESHOLDS,
+                 subscription_thresholds=SUBSCRIPTION_THRESHOLDS,
+                 allowed_subscription_ids=None,
+                 denied_subscription_ids=None,
+                 ):
+        self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
+        self._tenant_id = tenant_id
+        self._client_id = client_id
+        self.resource_group_thresholds = resource_group_thresholds_schema.validate(resource_group_thresholds)
+        self.tenant_thresholds = tenant_thresholds_schema.validate(tenant_thresholds)
+        self.subscription_thresolds = subscription_thresholds_schema.validate(subscription_thresholds)
+        self.tenant_credentials = ClientSecretCredential(tenant_id, client_id, client_secret)
+        self.allowed_subscription_ids = allowed_subscription_ids
+        self.denied_subscription_ids = denied_subscription_ids
+        self._tenant = Tenant(credential=self.tenant_credentials,
+                              tenant_id=self._tenant_id,
+                              thresholds=self.tenant_thresholds,
+                              subscription_thresholds=self.subscription_thresolds,
+                              resource_group_thresholds=self.resource_group_thresholds,
+                              allowed_subscription_ids=self.allowed_subscription_ids,
+                              denied_subscription_ids=self.denied_subscription_ids)
+        self._defender_for_cloud = self._initialize_defender_for_cloud(credential=self.tenant_credentials)
+        self._frameworks = DefenderForCloud.validate_frameworks(frameworks)
+        self._tenant_energy_label = None
+        self._labeled_subscriptions_energy_label = None
+        self._tenant_labeled_subscriptions = None
 
     def _initialize_defender_for_cloud(self, credential):
         """Initialize defender for cloud."""

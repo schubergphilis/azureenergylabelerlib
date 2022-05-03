@@ -56,4 +56,3 @@ class SubscriptionNotPartOfTenant(Exception):
 
 class InvalidFrameworks(Exception):
     """The frameworks provided are not valid."""
-

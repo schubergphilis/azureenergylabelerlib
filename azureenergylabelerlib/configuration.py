@@ -25,11 +25,11 @@
 
 """
 configuration package.
+
 Import all parts from configuration here
 .. _Google Python Style Guide:
    http://google.github.io/styleguide/pyguide.html
 """
-import json
 import logging
 
 __author__ = 'Sayantan Khanra <ctyfoxylos@schubergphilis.com>'

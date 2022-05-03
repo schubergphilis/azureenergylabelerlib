@@ -52,10 +52,13 @@ LOGGER.addHandler(logging.NullHandler())
 
 def is_valid_subscription_id(subscription_id):
     """Checks whether a provided subscription_id is a valid Azure subscription id.
+
     Args:
         subscription_id (str): A subscription id string.
+
     Returns:
         True if the provided value is a valid Azure subscription id, false otherwise.
+
     """
     if not isinstance(subscription_id, str):
         return False
@@ -64,10 +67,13 @@ def is_valid_subscription_id(subscription_id):
 
 def are_valid_subscription_ids(subscription_ids):
     """Checks whether a provided list of subscription ids contains all valid Azure subscription ids.
+
     Args:
         subscription_ids (list): A list of subscription id strings.
+
     Returns:
         True if the provided list contains all valid Azure subscription ids, false otherwise.
+
     """
     if not isinstance(subscription_ids, (list, tuple, set)):
         return False
@@ -76,12 +82,16 @@ def are_valid_subscription_ids(subscription_ids):
 
 def validate_subscription_ids(subscription_ids):
     """Validates a provided string or iterable that it contains valid Azure subscription ids.
+
     Args:
         subscription_ids: A string or iterable of strings with Azure subscription ids.
+
     Returns:
         subscription_ids (list): A list of valid Azure subscription ids.
+
     Raises:
         InvalidSubscriptionIdProvided: If any of the provided Subscription ids is not a valid Azure subscription id.
+
     """
     if subscription_ids is None:
         return []
@@ -99,18 +109,23 @@ def validate_subscription_ids(subscription_ids):
 
 def validate_allowed_denied_subscription_ids(allowed_subscription_ids=None, denied_subscription_ids=None):
     """Validates provided allow and deny account id lists.
+
     Not both arguments can contain values as they are logically mutually exclusive. The validations process also
     validates that the arguments contain valid account id values if provided.
+
     Args:
         allowed_subscription_ids (str|iterable): A single or multiple subscription id to validate,
             mutually exclusive with the deny list
         denied_subscription_ids (str|iterable): A single or multiple subscription id to validate,
             mutually exclusive with the allow list
+
     Returns:
         allowed_subscription_ids, denied_subscription_ids: A tuple of list values with valid account ids
+
     Raises:
         MutuallyExclusiveArguments: If both arguments contain values.
-        InvalidAccountListProvided: If any of the provided account ids is not a valid AWS account id.
+        InvalidSubscriptionListProvided: If any of the provided ids in the list is not a valid subscription id.
+
     """
     if all([allowed_subscription_ids, denied_subscription_ids]):
         raise MutuallyExclusiveArguments('allow_list and deny_list are mutually exclusive.')
