@@ -43,14 +43,17 @@ __status__ = '''Development'''  # "Prototype", "Development", "Production".
 
 
 class InvalidSubscriptionListProvided(Exception):
-	"""The list of subscriptions provided are not valid Azure subscriptions."""
+    """The list of subscriptions provided are not valid Azure subscriptions."""
 
 
 class MutuallyExclusiveArguments(Exception):
-	"""The arguments provided are mutually exclusive and only one of the should be provided."""
+    """The arguments provided are mutually exclusive and only one of the should be provided."""
+
 
 class SubscriptionNotPartOfTenant(Exception):
-	"""If subscription ids are provided but are not part of the tenant."""
+    """If subscription ids are provided but are not part of the tenant."""
+
 
 class InvalidFrameworks(Exception):
-	"""The frameworks provided are not valid."""
+    """The frameworks provided are not valid."""
+

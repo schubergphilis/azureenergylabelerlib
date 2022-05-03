@@ -87,7 +87,7 @@ def validate_subscription_ids(subscription_ids):
         return []
     if not isinstance(subscription_ids, (list, tuple, set, str)):
         raise InvalidSubscriptionListProvided(f'Only list, tuple, set or string of subscriptions are accepted input, '
-                                         f'received: {subscription_ids}')
+                                              f'received: {subscription_ids}')
     if isinstance(subscription_ids, str):
         if is_valid_subscription_id(subscription_ids):
             subscription_ids = [subscription_ids]

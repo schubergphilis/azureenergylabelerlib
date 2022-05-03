@@ -39,8 +39,7 @@ import pandas as pd
 from azure.mgmt.resource import SubscriptionClient, ResourceManagementClient
 import azure.mgmt.resourcegraph as arg
 from .configuration import (TENANT_THRESHOLDS,
-                            SUBSCRIPTION_FINDINGS_THRESHOLDS,
-                            SUBSCRIPTION_RESOURCE_GROUP_THRESHOLDS,
+                            SUBSCRIPTION_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             FINDINGS_QUERY_STRING)
 from .validations import validate_allowed_denied_subscription_ids
@@ -48,9 +47,8 @@ from .azureenergylabelerlibexceptions import (SubscriptionNotPartOfTenant,
                                               InvalidFrameworks)
 from .labels import (ResourceGroupEnergyLabel,
                      TenantEnergyLabel,
-                     SubscriptionEnergyLabelBasedOnResourceGroups,
-                     SubscriptionEnergyLabelBasedOnFindings,
-                     SubscriptionEnergyLabelAggregated)
+                     SubscriptionEnergyLabel,
+                     AggregateSubscriptionEnergyLabel)
 
 __author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
 __docformat__ = '''google'''
@@ -122,7 +120,7 @@ class Tenant:
                  credential,
                  id,
                  thresholds=TENANT_THRESHOLDS,
-                 subscription_thresholds=SUBSCRIPTION_FINDINGS_THRESHOLDS,
+                 subscription_thresholds=SUBSCRIPTION_THRESHOLDS,
                  resource_group_thresholds=RESOURCE_GROUP_THRESHOLDS,
                  allowed_subscription_ids=None,
                  denied_subscription_ids=None):
@@ -212,7 +210,7 @@ class Tenant:
         dataframe_measurements = pd.DataFrame([finding.measurement_data for finding in defender_for_cloud_findings])
         for subscription in self.subscriptions_to_be_labeled:
             self._logger.debug(f'Calculating energy label for subscription {subscription.subscription_id}')
-            subscription.get_aggregated_energy_label(dataframe_measurements)
+            subscription.get_energy_label(dataframe_measurements)
             labeled_subscriptions.append(subscription)
         return labeled_subscriptions
 
@@ -225,7 +223,7 @@ class Tenant:
         """
         if self._targeted_subscriptions_energy_label is None:
             labeled_subscriptions = self.get_labeled_targeted_subscriptions(defender_for_cloud_findings)
-            label_counter = Counter([subscription.get_aggregated_energy_label(defender_for_cloud_findings).label for subscription in labeled_subscriptions])
+            label_counter = Counter([subscription.energy_label.label for subscription in labeled_subscriptions])
             number_of_subscriptions = len(labeled_subscriptions)
             self._logger.debug(f'Number of subscriptions calculated are {number_of_subscriptions}')
             subscription_sums = []
@@ -239,17 +237,17 @@ class Tenant:
                                    f'and sums of {subscription_sums}')
                 if sum(subscription_sums) / number_of_subscriptions * 100 >= percentage:
                     self._logger.debug(f'Found a match with label {label}')
-                    self._targeted_subscriptions_energy_label = SubscriptionEnergyLabelAggregated(label,
-                                                                                                  min(label_counter.keys()),
-                                                                                                  max(label_counter.keys()),
-                                                                                                  number_of_subscriptions)
+                    self._targeted_subscriptions_energy_label = AggregateSubscriptionEnergyLabel(label,
+                                                                                                 min(label_counter.keys()),
+                                                                                                 max(label_counter.keys()),
+                                                                                                 number_of_subscriptions)
                     break
             else:
                 self._logger.debug('Found no match with thresholds, using default worst label F.')
-                self._targeted_subscriptions_energy_label = SubscriptionEnergyLabelAggregated('F',
-                                                                                    min(label_counter.keys()),
-                                                                                    max(label_counter.keys()),
-                                                                                    number_of_subscriptions)
+                self._targeted_subscriptions_energy_label = AggregateSubscriptionEnergyLabel('F',
+                                                                                             min(label_counter.keys()),
+                                                                                             max(label_counter.keys()),
+                                                                                             number_of_subscriptions)
         return self._targeted_subscriptions_energy_label
 
     def get_energy_label(self, defender_for_cloud_findings):
@@ -276,8 +274,7 @@ class Subscription:
                  ):
         self._credential = credential
         self._data = data
-        self._subscription_resource_group_thresholds = SUBSCRIPTION_RESOURCE_GROUP_THRESHOLDS
-        self._findings_thresholds = SUBSCRIPTION_FINDINGS_THRESHOLDS
+        self._subscription_thresholds = SUBSCRIPTION_THRESHOLDS
 
     def __post_init__(self):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
@@ -315,7 +312,7 @@ class Subscription:
         return [ResourceGroup(resource_group_detail) for resource_group_detail in
                 resource_group_client.resource_groups.list()]
 
-    def get_energy_label_based_on_subscription_findings(self, findings):
+    def get_energy_label(self, findings):
         """Calculates the energy label based on the subscription findings
         Args:
             findings: Either a list of defender for cloud findings .
@@ -326,7 +323,7 @@ class Subscription:
             findings = pd.DataFrame([finding.measurement_data for finding in findings])
         df = findings  # pylint: disable=invalid-name
         try:
-            open_findings = df[(df['Subscription ID'] == self.subscription_id)& (df['Resource Group Name'] == '')]
+            open_findings = df[(df['Subscription ID'] == self.subscription_id)]
         except KeyError:
             self._logger.info(f'No findings specific to the subscription {self.subscription_id}')
             self.energy_label = ResourceGroupEnergyLabel('A', 0, 0, 0)
@@ -342,68 +339,27 @@ class Subscription:
                          f'number of medium findings {number_of_medium_findings}, '
                          f'number of low findings {number_of_low_findings}')
 
-            for threshold in self._findings_thresholds:
+            for threshold in self._subscription_thresholds:
                 if all([number_of_high_findings <= threshold['high'],
                         number_of_medium_findings <= threshold['medium'],
                         number_of_low_findings <= threshold['low']]):
-                    self.energy_label = SubscriptionEnergyLabelBasedOnFindings(threshold['label'],
-                                                                               number_of_high_findings,
-                                                                               number_of_medium_findings,
-                                                                               number_of_low_findings)
+                    self.energy_label = SubscriptionEnergyLabel(threshold['label'],
+                                                                number_of_high_findings,
+                                                                number_of_medium_findings,
+                                                                number_of_low_findings)
                     LOGGER.debug(f'Energy Label for resource group {self.name} '
                                  f'has been calculated: {self.energy_label.label}')
                     break
                 else:
                     LOGGER.debug('No match with thresholds for energy label, using default worst one.')
-                    self.energy_label = SubscriptionEnergyLabelBasedOnFindings('F',
-                                                                               number_of_high_findings,
-                                                                               number_of_medium_findings,
-                                                                               number_of_low_findings)
+                    self.energy_label = SubscriptionEnergyLabel('F',
+                                                                number_of_high_findings,
+                                                                number_of_medium_findings,
+                                                                number_of_low_findings)
         except Exception:  # pylint: disable=broad-except
             LOGGER.exception(
                 f'Could not calculate energy label for subscription {self.subscription_id}, using the default "F"')
         return self.energy_label
-
-    def get_energy_label_based_on_resource_groups(self, findings):
-        """Get energy label based on the resource group findings."""
-        label_counter = Counter(
-            [resource_group.calculate_energy_label(findings).label for resource_group in self.resource_groups])
-        labels = []
-        resource_group_sums = []
-        number_of_resource_groups = len(self.resource_groups)
-        for threshold in self._subscription_resource_group_thresholds:
-            label = threshold.get('label')
-            percentage = threshold.get('percentage')
-            labels.append(label)
-            resource_group_sums.append(label_counter.get(label, 0))
-            LOGGER.debug(f'Calculating for labels {labels} with threshold {percentage} '
-                         f'and sums of {resource_group_sums}')
-            if sum(resource_group_sums) / number_of_resource_groups * 100 >= percentage:
-                LOGGER.debug(f'Found a match with label {label}')
-                self._targeted_subscriptions_energy_label = SubscriptionEnergyLabelBasedOnResourceGroups(label,
-                                                                                    min(label_counter.keys()),
-                                                                                    max(label_counter.keys()),
-                                                                                    number_of_resource_groups)
-                break
-            else:
-                LOGGER.debug('Found no match with thresholds, using default worst label F.')
-                self._targeted_subscriptions_energy_label = SubscriptionEnergyLabelBasedOnResourceGroups('F',
-                                                                                    min(label_counter.keys()),
-                                                                                    max(label_counter.keys()),
-                                                                                    number_of_resource_groups)
-        return self._targeted_subscriptions_energy_label
-
-    def get_aggregated_energy_label(self, findings):
-        """Aggregated Energy Label for the subscription."""
-        energy_label_based_on_resource_groups = self.get_energy_label_based_on_resource_groups(findings)
-        energy_label_based_on_findings_in_subscription = self.get_energy_label_based_on_subscription_findings(findings)
-        energy_labels = [energy_label_based_on_resource_groups.label, energy_label_based_on_findings_in_subscription.label]
-        energy_labels.sort()
-        final_energy_label = energy_labels[1]
-        return SubscriptionEnergyLabelAggregated(final_energy_label,
-                                                 energy_labels[0],
-                                                 energy_labels[1],
-                                                 energy_label_based_on_resource_groups.resource_groups_measured)
 
 
 class ResourceGroup:
@@ -444,7 +400,7 @@ class ResourceGroup:
             findings = pd.DataFrame([finding.measurement_data for finding in findings])
         df = findings  # pylint: disable=invalid-name
         try:
-            open_findings = df[(df['Resource Group Name'] == self.name)]
+            open_findings = df[(df['Resource Group Name'] == self.name.lower())]
         except KeyError:
             self._logger.info(f'No findings for resource group {self.name}')
             self.energy_label = ResourceGroupEnergyLabel('A', 0, 0, 0)
@@ -455,10 +411,10 @@ class ResourceGroup:
             number_of_low_findings = open_findings[open_findings['Severity'] == 'Low'].shape[0]
 
             LOGGER.debug(f'Calculating for resource group {self.name} '
-                               f'with number of high findings '
-                               f'{number_of_high_findings}, '
-                               f'number of medium findings {number_of_medium_findings}, '
-                               f'number of low findings {number_of_low_findings}')
+                         f'with number of high findings '
+                         f'{number_of_high_findings}, '
+                         f'number of medium findings {number_of_medium_findings}, '
+                         f'number of low findings {number_of_low_findings}')
 
             for threshold in self._threshold:
                 if all([number_of_high_findings <= threshold['high'],
@@ -478,11 +434,12 @@ class ResourceGroup:
                                                                  number_of_medium_findings,
                                                                  number_of_low_findings)
         except Exception:  # pylint: disable=broad-except
-            self._logger.exception(f'Could not calculate energy label for resource group {self.name}, using the default "F"')
+            self._logger.exception(
+                f'Could not calculate energy label for resource group {self.name}, using the default "F"')
         return self.energy_label
 
 
-class Finding:  # pylint: disable=too-many-public-methods
+class Finding:
     """Models a finding."""
 
     def __init__(self,
@@ -514,7 +471,7 @@ class Finding:  # pylint: disable=too-many-public-methods
     def compliance_control_id(self):
         """Compliance control id."""
         return self._data.get('complianceControlId', '')
-    
+
     @property
     def compliance_state(self):
         """Compliance state."""
@@ -524,12 +481,12 @@ class Finding:  # pylint: disable=too-many-public-methods
     def subscription_id(self):
         """Subscription id."""
         return self._data.get('subscriptionId', '')
-    
+
     @property
     def resource_group(self):
         """Resource group name."""
         return self._data.get('resourceGroup', '')
-    
+
     @property
     def resource_type(self):
         """Resource type."""
@@ -539,7 +496,7 @@ class Finding:  # pylint: disable=too-many-public-methods
     def resource_name(self):
         """Resource name."""
         return self._data.get('resourceName', '')
-    
+
     @property
     def resource_id(self):
         """Resource name."""
@@ -559,12 +516,12 @@ class Finding:  # pylint: disable=too-many-public-methods
     def recommendation_id(self):
         """Recommendation Id."""
         return self._data.get('recommendationId', '')
-    
+
     @property
     def recommendation_name(self):
         """Recommendation Name."""
         return self._data.get('recommendationName', '')
-    
+
     @property
     def recommendation_display_name(self):
         """Recommendation Display Name."""
@@ -574,17 +531,17 @@ class Finding:  # pylint: disable=too-many-public-methods
     def description(self):
         """Finding Description."""
         return self._data.get('description', '')
-    
+
     @property
     def remediation_steps(self):
         """Remediation Steps."""
         return self._data.get('remediationSteps', '')
-    
+
     @property
     def azure_portal_recommendation_link(self):
         """Azure portal recommendation link Steps."""
         return self._data.get('azurePortalRecommendationLink', '')
-    
+
     @property
     def control_name(self):
         """Control Name."""

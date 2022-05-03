@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File: azureenergylabelerlib.py
+# File: schemas.py
 #
-# Copyright 2022 Sayantan Khanra
+# Copyright 2021 Costas Tyfoxylos, Jenda Brands, Theodoor Scholte
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to
@@ -24,15 +24,14 @@
 #
 
 """
-Main code for azureenergylabelerlib.
-
+schemas package.
+Import all parts from schemas here
 .. _Google Python Style Guide:
    http://google.github.io/styleguide/pyguide.html
-
 """
 
 import logging
-from dataclasses import dataclass
+from schema import Schema, And
 
 __author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
 __docformat__ = '''google'''
@@ -44,49 +43,19 @@ __maintainer__ = '''Sayantan Khanra'''
 __email__ = '''<skhanra@schubergphilis.com>'''
 __status__ = '''Development'''  # "Prototype", "Development", "Production".
 
-LOGGER_BASENAME = '''labels'''
+LOGGER_BASENAME = '''schemas'''
 LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
 
+resource_group_thresholds_schema = Schema([{'label': lambda label: label in ('A', 'B', 'C', 'D', 'E'),
+                                            'high': And(int, lambda n: n >= 0),
+                                            'medium': And(int, lambda n: n >= 0),
+                                            'low': And(int, lambda n: n >= 0)}])
 
-@dataclass
-class AggregateEnergyLabel:
-    """Models an energy label averaging multiple account labels."""
+subscription_thresholds_schema = Schema([{'label': lambda label: label in ('A', 'B', 'C', 'D', 'E'),
+                                          'high': And(int, lambda n: n >= 0),
+                                          'medium': And(int, lambda n: n >= 0),
+                                          'low': And(int, lambda n: n >= 0)}])
 
-    label: str
-    best_label: str
-    worst_label: str
-
-
-@dataclass
-class AggregateSubscriptionEnergyLabel(AggregateEnergyLabel):
-    """Models the landing zone energy label."""
-
-    subscriptions_measured: str
-
-
-@dataclass
-class TenantEnergyLabel(AggregateEnergyLabel):
-    """Models the landing zone energy label."""
-
-    coverage: str
-
-
-@dataclass
-class ResourceGroupEnergyLabel:
-    """Models the account energy label."""
-
-    label: str = "F"
-    number_of_high_findings: int = 9999
-    number_of_medium_findings: int = 9999
-    number_of_low_findings: int = 9999
-
-
-@dataclass
-class SubscriptionEnergyLabel:
-    """Models the subscription energy label."""
-
-    label: str = "F"
-    number_of_high_findings: int = 9999
-    number_of_medium_findings: int = 9999
-    number_of_low_findings: int = 9999
+tenant_thresholds_schema = Schema([{'label': lambda label: label in ('A', 'B', 'C', 'D', 'E'),
+                                    'percentage': And(int, lambda n: 0 <= n <= 100)}])
