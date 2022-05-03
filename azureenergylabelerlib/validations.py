@@ -62,7 +62,7 @@ def is_valid_subscription_id(subscription_id):
     """
     if not isinstance(subscription_id, str):
         return False
-    return len(subscription_id) == 32
+    return len(subscription_id) == 36
 
 
 def are_valid_subscription_ids(subscription_ids):

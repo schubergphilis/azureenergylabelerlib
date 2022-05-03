@@ -190,7 +190,8 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
             The list of subscriptions based on the allowed list.
 
         """
-        return [subscription for subscription in self.subscriptions if subscription.id in self.allowed_subscription_ids]
+        return [subscription for subscription in self.subscriptions if
+                subscription.subscription_id in self.allowed_subscription_ids]
 
     def get_not_denied_subscriptions(self):
         """Retrieves denied subscriptions based on an denied list.
@@ -200,7 +201,7 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
 
         """
         return [subscription for subscription in self.subscriptions if
-                subscription.id not in self.denied_subscription_ids]
+                subscription.subscription_id not in self.denied_subscription_ids]
 
     @property
     def subscriptions_to_be_labeled(self):
