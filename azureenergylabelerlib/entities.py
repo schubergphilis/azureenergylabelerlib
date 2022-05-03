@@ -76,8 +76,6 @@ class DefenderForCloud:
                  ):
         self._credential = credential
         self.subscription_list = subscription_list
-
-    def __post_init__(self):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
 
     @staticmethod
@@ -309,8 +307,6 @@ class Subscription:
         self._credential = credential
         self._data = data
         self._subscription_thresholds = SUBSCRIPTION_THRESHOLDS
-
-    def __post_init__(self):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
 
     @property
@@ -371,7 +367,7 @@ class Subscription:
             number_of_medium_findings = open_findings[open_findings['Severity'] == 'Medium'].shape[0]
             number_of_low_findings = open_findings[open_findings['Severity'] == 'Low'].shape[0]
 
-            LOGGER.debug(f'Calculating for subscription {self.subscription_id} '
+            self._logger.debug(f'Calculating for subscription {self.subscription_id} '
                          f'with number of high findings '
                          f'{number_of_high_findings}, '
                          f'number of medium findings {number_of_medium_findings}, '
@@ -385,16 +381,16 @@ class Subscription:
                                                                 number_of_high_findings,
                                                                 number_of_medium_findings,
                                                                 number_of_low_findings)
-                    LOGGER.debug(f'Energy Label for subscription {self.subscription_id} '
+                    self._logger.debug(f'Energy Label for subscription {self.subscription_id} '
                                  f'has been calculated: {self.energy_label.label}')
                     break
-                LOGGER.debug('No match with thresholds for energy label, using default worst one.')
+                self._logger.debug('No match with thresholds for energy label, using default worst one.')
                 self.energy_label = SubscriptionEnergyLabel('F',  # pylint: disable=attribute-defined-outside-init
                                                             number_of_high_findings,
                                                             number_of_medium_findings,
                                                             number_of_low_findings)
         except Exception:  # pylint: disable=broad-except
-            LOGGER.exception(
+            self._logger.exception(
                 f'Could not calculate energy label for subscription {self.subscription_id}, using the default "F"')
         return self.energy_label
 
@@ -407,8 +403,6 @@ class ResourceGroup:
                  ):
         self._data = data
         self._threshold = RESOURCE_GROUP_THRESHOLDS
-
-    def __post_init__(self):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
 
     @property
