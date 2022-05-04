@@ -368,10 +368,10 @@ class Subscription:
             number_of_low_findings = open_findings[open_findings['Severity'] == 'Low'].shape[0]
 
             self._logger.debug(f'Calculating for subscription {self.subscription_id} '
-                         f'with number of high findings '
-                         f'{number_of_high_findings}, '
-                         f'number of medium findings {number_of_medium_findings}, '
-                         f'number of low findings {number_of_low_findings}')
+                               f'with number of high findings '
+                               f'{number_of_high_findings}, '
+                               f'number of medium findings {number_of_medium_findings}, '
+                               f'number of low findings {number_of_low_findings}')
 
             for threshold in self._subscription_thresholds:
                 if all([number_of_high_findings <= threshold['high'],
@@ -382,7 +382,7 @@ class Subscription:
                                                                 number_of_medium_findings,
                                                                 number_of_low_findings)
                     self._logger.debug(f'Energy Label for subscription {self.subscription_id} '
-                                 f'has been calculated: {self.energy_label.label}')
+                                       f'has been calculated: {self.energy_label.label}')
                     break
                 self._logger.debug('No match with thresholds for energy label, using default worst one.')
                 self.energy_label = SubscriptionEnergyLabel('F',  # pylint: disable=attribute-defined-outside-init
