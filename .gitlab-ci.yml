@@ -5,27 +5,27 @@ stages:
   - upload
 
 lint:
-  tags: [elastic]
+  tags: [docker]
   stage: lint
-  image: enexis-docker-local.jfrog.io/python3_ci:0.4.1
+  image: IMAGE_WITH_PYTHON37_AND_PIPENV
   script: _CI/scripts/lint.py
 
 test:
-  tags: [elastic]
+  tags: [docker]
   stage: test
-  image: enexis-docker-local.jfrog.io/python3_ci:0.4.1
+  image: IMAGE_WITH_PYTHON37_AND_PIPENV
   script: _CI/scripts/test.py
 
 build:
-  tags: [elastic]
+  tags: [docker]
   stage: build
-  image: enexis-docker-local.jfrog.io/python3_ci:0.4.1
+  image: IMAGE_WITH_PYTHON37_AND_PIPENV
   script: _CI/scripts/build.py
 
 upload:
-  tags: [elastic]
+  tags: [docker]
   stage: upload
-  image: enexis-docker-local.jfrog.io/python3_ci:0.4.1
+  image: IMAGE_WITH_PYTHON37_AND_PIPENV
   only:
     - tags
   except:
