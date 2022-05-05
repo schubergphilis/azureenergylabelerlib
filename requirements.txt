@@ -12,6 +12,7 @@ azure-identity~=1.9.0
 azure-cli-core~=2.35.0
 azure-mgmt-resourcegraph~=8.0.0
 azure-mgmt-resource~=21.0.0
+azure-storage-blob~=12.11.0
 schema~=0.7.5
 pandas~=1.3.5
 cachetools~=4.2.4

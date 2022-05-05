@@ -56,3 +56,7 @@ class SubscriptionNotPartOfTenant(Exception):
 
 class InvalidFrameworks(Exception):
     """The frameworks provided are not valid."""
+
+
+class InvalidPath(Exception):
+    """The path provided is not valid."""

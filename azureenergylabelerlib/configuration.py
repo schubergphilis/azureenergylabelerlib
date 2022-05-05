@@ -32,6 +32,12 @@ Import all parts from configuration here
 """
 import logging
 
+from .datamodels import (TenantEnergyLabelingData,
+                         LabeledSubscriptionData,
+                         LabeledResourceGroupData,
+                         LabeledSubscriptionsData,
+                         DefenderForCloudFindingsData)
+
 __author__ = 'Sayantan Khanra <ctyfoxylos@schubergphilis.com>'
 __docformat__ = '''google'''
 __date__ = '''09-11-2021'''
@@ -145,3 +151,38 @@ RESOURCE_GROUP_THRESHOLDS = [{'label': 'A',
                               'low': 100}]
 
 DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Azure Security Benchmark', 'SOC TSP', 'Azure CIS 1.1.0'}
+
+FILE_EXPORT_TYPES = [
+    {'type': 'tenant_energy_label',
+     'filename': 'tenant-energy-label.json',
+     'object_type': TenantEnergyLabelingData,
+     'required_arguments': ['id', 'energy_label']},
+    {'type': 'findings',
+     'filename': 'defender-for-cloud-findings.json',
+     'object_type': DefenderForCloudFindingsData,
+     'required_arguments': ['defender_for_cloud_findings']},
+    {'type': 'labeled_subscriptions',
+     'filename': 'labeled-subscriptions.json',
+     'object_type': LabeledSubscriptionsData,
+     'required_arguments': ['labeled_subscriptions']},
+    {'type': 'subscription_energy_label',
+     'filename': 'subscription-energy-label.json',
+     'object_type': LabeledSubscriptionData,
+     'required_arguments': ['labeled_subscriptions']},
+    {'type': 'resource_group_energy_label',
+     'filename': 'resource-group-energy-label.json',
+     'object_type': LabeledResourceGroupData,
+     'required_arguments': ['labeled_resource_groups']},
+]
+
+DATA_EXPORT_TYPES = ['findings']
+
+SUBSCRIPTION_METRIC_EXPORT_TYPES = ['subscription_energy_label']
+
+RESOURCE_GROUP_METRIC_EXPORT_TYPES = ['resource_group_energy_label']
+
+TENANT_METRIC_EXPORT_TYPES = ['tenant_energy_label']
+
+ALL_SUBSCRIPTION_EXPORT_DATA = SUBSCRIPTION_METRIC_EXPORT_TYPES + DATA_EXPORT_TYPES
+
+ALL_TENANT_EXPORT_TYPES = TENANT_METRIC_EXPORT_TYPES + DATA_EXPORT_TYPES

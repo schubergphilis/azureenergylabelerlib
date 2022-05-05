@@ -32,19 +32,25 @@ Main code for azureenergylabelerlib.
 """
 
 import logging
+from copy import copy
 from collections import Counter
+from urllib.parse import urlparse
+from pathlib import Path
 from cachetools import cached, TTLCache
 from pandas.core.frame import DataFrame
 import pandas as pd
 from azure.mgmt.resource import SubscriptionClient, ResourceManagementClient
+from azure.storage.blob import BlobServiceClient
 import azure.mgmt.resourcegraph as arg
 from .configuration import (TENANT_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
-                            FINDINGS_QUERY_STRING)
-from .validations import validate_allowed_denied_subscription_ids
+                            FINDINGS_QUERY_STRING,
+                            FILE_EXPORT_TYPES)
+from .validations import validate_allowed_denied_subscription_ids, DestinationPath
 from .azureenergylabelerlibexceptions import (SubscriptionNotPartOfTenant,
-                                              InvalidFrameworks)
+                                              InvalidFrameworks,
+                                              InvalidPath)
 from .labels import (ResourceGroupEnergyLabel,
                      TenantEnergyLabel,
                      SubscriptionEnergyLabel,
@@ -583,3 +589,88 @@ class Finding:
             'Resource Group Name': self.resource_group,
             'Severity': self.severity
         }
+
+
+class DataExporter:  # pylint: disable=too-few-public-methods
+    """Export Azure security data."""
+
+    #  pylint: disable=too-many-arguments
+    def __init__(self,
+                 export_types,
+                 id,  # pylint: disable=redefined-builtin
+                 energy_label,
+                 defender_for_cloud_findings,
+                 labeled_subscriptions,
+                 credentials=None):
+        self._id = id
+        self.energy_label = energy_label
+        self.defender_for_cloud_findings = defender_for_cloud_findings
+        self.labeled_subscriptions = labeled_subscriptions
+        self.export_types = export_types
+        self._credentials = credentials
+        self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
+
+    def export(self, path):
+        """Exports the data to the provided path."""
+        destination = DestinationPath(path)
+        if not destination.is_valid():
+            raise InvalidPath(path)
+        for export_type in self.export_types:
+            data_file = DataFileFactory(export_type,
+                                        self._id,
+                                        self.energy_label,
+                                        self.defender_for_cloud_findings,
+                                        self.labeled_subscriptions)
+            if destination.type == 'blob':
+                self._export_to_blob(path, data_file.filename, data_file.json)  # pylint: disable=no-member
+            else:
+                self._export_to_fs(path, data_file.filename, data_file.json)  # pylint: disable=no-member
+
+    def _export_to_fs(self, directory, filename, data):
+        """Exports as json to local filesystem."""
+        path = Path(directory)
+        try:
+            path.mkdir()
+        except FileExistsError:
+            self._logger.debug(f'Directory {directory} already exists.')
+        with open(path.joinpath(filename), 'w') as jsonfile:
+            jsonfile.write(data)
+        self._logger.info(f'File {filename} copied to {directory}')
+
+    def _export_to_blob(self, blob_url, filename, data):
+        """Exports as json to S3 object storage."""
+        _parsed_url = urlparse(blob_url)
+        blob_service_client = BlobServiceClient(account_url=f'{_parsed_url.scheme}://{_parsed_url.netloc}/',
+                                                credential=self._credentials)
+        container = _parsed_url.path.split('/')[1]
+        blob = _parsed_url.path.split('/')[2]
+        blob_client = blob_service_client.get_blob_client(container=container, blob=blob)
+        try:
+            blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
+            self._logger.info(f'File {filename} copied to blob {blob_url}')
+        except Exception as error:  # pylint: disable=broad-except
+            self._logger.error(error)
+            self._logger.info(f'File {filename} copy to blob {blob_url} failed')
+
+
+class DataFileFactory:  # pylint: disable=too-few-public-methods
+    """Data export factory to handle the different data types returned."""
+
+    #  pylint: disable=too-many-arguments, unused-argument
+    def __new__(cls,
+                export_type,
+                id,  # pylint: disable=redefined-builtin
+                energy_label,
+                defender_for_cloud_findings,
+                labeled_subscriptions):
+        data_file_configuration = next((datafile for datafile in FILE_EXPORT_TYPES
+                                        if datafile.get('type') == export_type.lower()), None)
+
+        if not data_file_configuration:
+            LOGGER.error('Unknown data type %s', export_type)
+            return None
+        obj = data_file_configuration.get('object_type')
+        arguments = {'filename': data_file_configuration.get('filename')}
+        arguments.update({key: value for key, value in copy(locals()).items()
+                          if key in data_file_configuration.get('required_arguments')})
+        return obj(**arguments)

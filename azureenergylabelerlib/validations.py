@@ -32,8 +32,10 @@ Main code for azureenergylabelerlib.
 """
 
 import logging
+from urllib.parse import urlparse
 from .azureenergylabelerlibexceptions import (InvalidSubscriptionListProvided,
-                                              MutuallyExclusiveArguments)
+                                              MutuallyExclusiveArguments,
+                                              InvalidPath)
 
 __author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
 __docformat__ = '''google'''
@@ -130,3 +132,30 @@ def validate_allowed_denied_subscription_ids(allowed_subscription_ids=None, deni
     if all([allowed_subscription_ids, denied_subscription_ids]):
         raise MutuallyExclusiveArguments('allow_list and deny_list are mutually exclusive.')
     return validate_subscription_ids(allowed_subscription_ids), validate_subscription_ids(denied_subscription_ids)
+
+
+class DestinationPath:
+    """Models a destination path and identifies if it is valid and it's type."""
+
+    def __init__(self, location):
+        print(location)
+        self.location = location
+        self._parsed_url = urlparse(location)
+        self._blob_conditions = ["blob.core.windows.net" in self._parsed_url.netloc,
+                                 len(self._parsed_url.path) >= 1]
+        self._local_conditions = [self._parsed_url.scheme == "",
+                                  self._parsed_url.netloc == "",
+                                  len(self._parsed_url.path) >= 1]
+
+    def is_valid(self):
+        """Is the path valid."""
+        return all(self._blob_conditions) or all(self._local_conditions)
+
+    @property
+    def type(self):
+        """The type of the path."""
+        if all(self._blob_conditions):
+            return 'blob'
+        if all(self._local_conditions):
+            return 'local'
+        raise InvalidPath(self.location)
