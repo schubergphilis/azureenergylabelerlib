@@ -33,8 +33,7 @@ Import all parts from configuration here
 import logging
 
 from .datamodels import (TenantEnergyLabelingData,
-                         LabeledSubscriptionData,
-                         LabeledResourceGroupData,
+                         LabeledResourceGroupsData,
                          LabeledSubscriptionsData,
                          DefenderForCloudFindingsData)
 
@@ -167,12 +166,12 @@ FILE_EXPORT_TYPES = [
      'required_arguments': ['labeled_subscriptions']},
     {'type': 'subscription_energy_label',
      'filename': 'subscription-energy-label.json',
-     'object_type': LabeledSubscriptionData,
+     'object_type': LabeledSubscriptionsData,
      'required_arguments': ['labeled_subscriptions']},
     {'type': 'resource_group_energy_label',
      'filename': 'resource-group-energy-label.json',
-     'object_type': LabeledResourceGroupData,
-     'required_arguments': ['labeled_resource_groups']},
+     'object_type': LabeledResourceGroupsData,
+     'required_arguments': ['labeled_subscriptions', 'defender_for_cloud_findings']},
 ]
 
 DATA_EXPORT_TYPES = ['findings']

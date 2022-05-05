@@ -421,7 +421,7 @@ class ResourceGroup:
         """name."""
         return self._data.name
 
-    def calculate_energy_label(self, findings):
+    def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
 
         Args:
@@ -643,8 +643,7 @@ class DataExporter:  # pylint: disable=too-few-public-methods
         blob_service_client = BlobServiceClient(account_url=f'{_parsed_url.scheme}://{_parsed_url.netloc}/',
                                                 credential=self._credentials)
         container = _parsed_url.path.split('/')[1]
-        blob = _parsed_url.path.split('/')[2]
-        blob_client = blob_service_client.get_blob_client(container=container, blob=blob)
+        blob_client = blob_service_client.get_blob_client(container=container, blob=filename)
         try:
             blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
             self._logger.info(f'File {filename} copied to blob {blob_url}')

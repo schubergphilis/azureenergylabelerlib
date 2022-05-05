@@ -138,7 +138,6 @@ class DestinationPath:
     """Models a destination path and identifies if it is valid and it's type."""
 
     def __init__(self, location):
-        print(location)
         self.location = location
         self._parsed_url = urlparse(location)
         self._blob_conditions = ["blob.core.windows.net" in self._parsed_url.netloc,

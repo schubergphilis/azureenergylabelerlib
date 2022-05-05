@@ -100,7 +100,7 @@ class DefenderForCloudFindingsData:  # pylint: disable=too-few-public-methods
                            for finding in self._defender_for_cloud_findings], indent=2, default=str)
 
 
-class LabeledSubscriptionData:  # pylint: disable=too-few-public-methods
+class LabeledSubscriptionData:
     """Models the data for energy labeling to export."""
 
     def __init__(self, filename, labeled_subscription):
@@ -118,28 +118,61 @@ class LabeledSubscriptionData:  # pylint: disable=too-few-public-methods
                 'Number of low findings': self._labeled_subscription.energy_label.number_of_low_findings,
                 'Energy Label': self._labeled_subscription.energy_label.label}
 
+    @property
+    def json(self):
+        """Data to json."""
+        return json.dumps(self.data, indent=2, default=str)
+
 
 class LabeledResourceGroupData:
     """Models the data for energy labeling to export."""
 
-    def __init__(self, filename, labeled_resource_group):
+    def __init__(self, filename, labeled_resource_group_data, defender_for_cloud_findings):
         self.filename = filename
-        self._labeled_resource_group = labeled_resource_group
+        self._subscription_id = labeled_resource_group_data.get('subscription_id')
+        self._labeled_resource_group = labeled_resource_group_data.get('labeled_resource_group')
+        self._defender_for_cloud_findings = defender_for_cloud_findings
 
     @property
     def data(self):
         """Data of an subscription to export."""
-        return {'ResourceGroup Name': self._labeled_resource_group.name,
+        energy_label = self._labeled_resource_group.get_energy_label(self._defender_for_cloud_findings)
+        return {'Subscription ID': self._subscription_id,
+                'ResourceGroup Name': self._labeled_resource_group.name,
                 'Number of high findings':
-                    self._labeled_resource_group.energy_label.number_of_high_findings,
-                'Number of medium findings': self._labeled_resource_group.energy_label.number_of_medium_findings,
-                'Number of low findings': self._labeled_resource_group.energy_label.number_of_low_findings,
-                'Energy Label': self._labeled_resource_group.energy_label.label}
+                    energy_label.number_of_high_findings,
+                'Number of medium findings': energy_label.number_of_medium_findings,
+                'Number of low findings': energy_label.number_of_low_findings,
+                'Energy Label': energy_label.label}
 
     @property
     def json(self):
         """Data to json."""
         return json.dumps(self.data, indent=2, default=str)
+
+
+class LabeledResourceGroupsData:  # pylint: disable=too-few-public-methods
+    """Models the data for energy labeling to export."""
+
+    def __init__(self, filename, labeled_subscriptions, defender_for_cloud_findings):
+        self.filename = filename
+        self._labeled_subscriptions = labeled_subscriptions
+        self._defender_for_cloud_findings = defender_for_cloud_findings
+
+    @property
+    def json(self):
+        """Data to json."""
+        labeled_resource_groups = []
+        for subscription in self._labeled_subscriptions:
+            for resource_group in subscription.resource_groups:
+                labeled_resource_groups.append({
+                    'subscription_id': subscription.subscription_id,
+                    'labeled_resource_group': resource_group
+                })
+        return json.dumps([LabeledResourceGroupData(self.filename,
+                                                    resource_group,
+                                                    self._defender_for_cloud_findings).data
+                           for resource_group in labeled_resource_groups], indent=2, default=str)
 
 
 class LabeledSubscriptionsData:  # pylint: disable=too-few-public-methods
@@ -152,5 +185,5 @@ class LabeledSubscriptionsData:  # pylint: disable=too-few-public-methods
     @property
     def json(self):
         """Data to json."""
-        return json.dumps([LabeledSubscriptionData(self.filename, account).data
-                           for account in self._labeled_subscriptions], indent=2, default=str)
+        return json.dumps([LabeledSubscriptionData(self.filename, subscription).data
+                           for subscription in self._labeled_subscriptions], indent=2, default=str)
