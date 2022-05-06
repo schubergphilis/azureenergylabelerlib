@@ -59,6 +59,8 @@ FINDINGS_QUERY_STRING = "    securityresources\
     | join kind = leftouter(\
     securityresources\
     | where type == \"microsoft.security/assessments\") on subscriptionId, name\
+    | extend firstEvaluationDate = tostring(properties1.status.firstEvaluationDate)\
+    | extend statusChangeDate = tostring(properties1.status.statusChangeDate)\
     | extend complianceState = tostring(properties.state)\
     | extend resourceSource = tolower(tostring(properties1.resourceDetails.Source))\
     | extend recommendationId = iff(isnull(id1) or isempty(id1), id, id1)\
@@ -84,7 +86,7 @@ FINDINGS_QUERY_STRING = "    securityresources\
                 | extend state = iff(expectedInitiative, tolower(statusPerInitiative.assessmentStatus.code), tolower(properties1.status.code))\
                 | extend notApplicableReason = iff(expectedInitiative, tostring(statusPerInitiative.assessmentStatus.cause), tostring(properties1.status.cause))\
                 | project-away expectedInitiative\
-    | project complianceStandardId, complianceControlId, complianceState, subscriptionId, resourceGroup = resourceGroup1 ,resourceType, resourceName, resourceId, recommendationId, recommendationName, recommendationDisplayName, description, remediationSteps, severity, state, notApplicableReason, azurePortalRecommendationLink\
+    | project firstEvaluationDate, statusChangeDate, complianceStandardId, complianceControlId, complianceState, subscriptionId, resourceGroup = resourceGroup1 ,resourceType, resourceName, resourceId, recommendationId, recommendationName, recommendationDisplayName, description, remediationSteps, severity, state, notApplicableReason, azurePortalRecommendationLink\
     | join kind = leftouter (securityresources\
     | where type == \"microsoft.security/regulatorycompliancestandards/regulatorycompliancecontrols\"\
     | extend complianceStandardId = replace( \"-\", \" \", extract(@'/regulatoryComplianceStandards/([^/]*)', 1, id))\
@@ -110,44 +112,54 @@ TENANT_THRESHOLDS = [{'label': 'A',
 SUBSCRIPTION_THRESHOLDS = [{'label': 'A',
                             'high': 0,
                             'medium': 10,
-                            'low': 20},
+                            'low': 20,
+                            'days_open_less_than': 999},
                            {'label': 'B',
                             'high': 10,
                             'medium': 20,
-                            'low': 40},
+                            'low': 40,
+                            'days_open_less_than': 999},
                            {'label': 'C',
                             'high': 15,
                             'medium': 30,
-                            'low': 60},
+                            'low': 60,
+                            'days_open_less_than': 999},
                            {'label': 'D',
                             'high': 20,
                             'medium': 40,
-                            'low': 80},
+                            'low': 80,
+                            'days_open_less_than': 999},
                            {'label': 'E',
                             'high': 25,
                             'medium': 50,
-                            'low': 100}]
+                            'low': 100,
+                            'days_open_less_than': 999}]
 
 RESOURCE_GROUP_THRESHOLDS = [{'label': 'A',
                               'high': 0,
                               'medium': 10,
-                              'low': 20},
+                              'low': 20,
+                              'days_open_less_than': 999},
                              {'label': 'B',
                               'high': 10,
                               'medium': 20,
-                              'low': 40},
+                              'low': 40,
+                              'days_open_less_than': 999},
                              {'label': 'C',
                               'high': 15,
                               'medium': 30,
-                              'low': 60},
+                              'low': 60,
+                              'days_open_less_than': 999},
                              {'label': 'D',
                               'high': 20,
                               'medium': 40,
-                              'low': 80},
+                              'low': 80,
+                              'days_open_less_than': 999},
                              {'label': 'E',
                               'high': 25,
                               'medium': 50,
-                              'low': 100}]
+                              'low': 100,
+                              'days_open_less_than': 999}]
 
 DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Azure Security Benchmark', 'SOC TSP', 'Azure CIS 1.1.0'}
 

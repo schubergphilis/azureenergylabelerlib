@@ -95,7 +95,8 @@ class DefenderForCloudFindingsData:  # pylint: disable=too-few-public-methods
                             'Description': finding.description,
                             'Remediation Steps': finding.remediation_steps,
                             'Azure Portal Recommendation Link': finding.azure_portal_recommendation_link,
-                            'Control Name': finding.control_name
+                            'Control Name': finding.control_name,
+                            'Days Open': finding.days_open
                             }
                            for finding in self._defender_for_cloud_findings], indent=2, default=str)
 
@@ -116,6 +117,7 @@ class LabeledSubscriptionData:
                     self._labeled_subscription.energy_label.number_of_high_findings,
                 'Number of medium findings': self._labeled_subscription.energy_label.number_of_medium_findings,
                 'Number of low findings': self._labeled_subscription.energy_label.number_of_low_findings,
+                'Number of maximum days open': self._labeled_subscription.energy_label.max_days_open,
                 'Energy Label': self._labeled_subscription.energy_label.label}
 
     @property
@@ -143,6 +145,7 @@ class LabeledResourceGroupData:
                     energy_label.number_of_high_findings,
                 'Number of medium findings': energy_label.number_of_medium_findings,
                 'Number of low findings': energy_label.number_of_low_findings,
+                'Number of maximum days open': energy_label.max_days_open,
                 'Energy Label': energy_label.label}
 
     @property

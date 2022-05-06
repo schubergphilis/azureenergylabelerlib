@@ -36,6 +36,7 @@ from copy import copy
 from collections import Counter
 from urllib.parse import urlparse
 from pathlib import Path
+from datetime import datetime
 from cachetools import cached, TTLCache
 from pandas.core.frame import DataFrame
 import pandas as pd
@@ -372,21 +373,30 @@ class Subscription:
             number_of_high_findings = open_findings[open_findings['Severity'] == 'High'].shape[0]
             number_of_medium_findings = open_findings[open_findings['Severity'] == 'Medium'].shape[0]
             number_of_low_findings = open_findings[open_findings['Severity'] == 'Low'].shape[0]
+            open_findings_low_or_higher = open_findings[(open_findings['Severity'] == 'Low') |
+                                                        (open_findings['Severity'] == 'Medium') |
+                                                        (open_findings['Severity'] == 'High')]
+            max_days_open = max(open_findings_low_or_higher['Days Open']) \
+                if open_findings_low_or_higher['Days Open'].shape[0] > 0 else 0
 
             self._logger.debug(f'Calculating for subscription {self.subscription_id} '
                                f'with number of high findings '
                                f'{number_of_high_findings}, '
                                f'number of medium findings {number_of_medium_findings}, '
-                               f'number of low findings {number_of_low_findings}')
-
+                               f'number of low findings {number_of_low_findings}, '
+                               f'and findings have been open for over '
+                               f'{max_days_open} days'
+                               )
             for threshold in self._subscription_thresholds:
                 if all([number_of_high_findings <= threshold['high'],
                         number_of_medium_findings <= threshold['medium'],
-                        number_of_low_findings <= threshold['low']]):
+                        number_of_low_findings <= threshold['low'],
+                        max_days_open < threshold['days_open_less_than']]):
                     self.energy_label = SubscriptionEnergyLabel(threshold['label'],  # pylint: disable=attribute-defined-outside-init
                                                                 number_of_high_findings,
                                                                 number_of_medium_findings,
-                                                                number_of_low_findings)
+                                                                number_of_low_findings,
+                                                                max_days_open)
                     self._logger.debug(f'Energy Label for subscription {self.subscription_id} '
                                        f'has been calculated: {self.energy_label.label}')
                     break
@@ -394,7 +404,8 @@ class Subscription:
                 self.energy_label = SubscriptionEnergyLabel('F',  # pylint: disable=attribute-defined-outside-init
                                                             number_of_high_findings,
                                                             number_of_medium_findings,
-                                                            number_of_low_findings)
+                                                            number_of_low_findings,
+                                                            max_days_open)
         except Exception:  # pylint: disable=broad-except
             self._logger.exception(
                 f'Could not calculate energy label for subscription {self.subscription_id}, using the default "F"')
@@ -444,21 +455,30 @@ class ResourceGroup:
             number_of_high_findings = open_findings[open_findings['Severity'] == 'High'].shape[0]
             number_of_medium_findings = open_findings[open_findings['Severity'] == 'Medium'].shape[0]
             number_of_low_findings = open_findings[open_findings['Severity'] == 'Low'].shape[0]
+            open_findings_low_or_higher = open_findings[(open_findings['Severity'] == 'Low') |
+                                                        (open_findings['Severity'] == 'Medium') |
+                                                        (open_findings['Severity'] == 'High')]
+            max_days_open = max(open_findings_low_or_higher['Days Open']) \
+                if open_findings_low_or_higher['Days Open'].shape[0] > 0 else 0
 
             LOGGER.debug(f'Calculating for resource group {self.name} '
                          f'with number of high findings '
                          f'{number_of_high_findings}, '
                          f'number of medium findings {number_of_medium_findings}, '
-                         f'number of low findings {number_of_low_findings}')
-
+                         f'number of low findings {number_of_low_findings}, '
+                         f'and findings have been open for over '
+                         f'{max_days_open} days'
+                         )
             for threshold in self._threshold:
                 if all([number_of_high_findings <= threshold['high'],
                         number_of_medium_findings <= threshold['medium'],
-                        number_of_low_findings <= threshold['low']]):
+                        number_of_low_findings <= threshold['low'],
+                        max_days_open < threshold['days_open_less_than']]):
                     self.energy_label = ResourceGroupEnergyLabel(threshold['label'],  # pylint: disable=attribute-defined-outside-init
                                                                  number_of_high_findings,
                                                                  number_of_medium_findings,
-                                                                 number_of_low_findings)
+                                                                 number_of_low_findings,
+                                                                 max_days_open)
                     LOGGER.debug(f'Energy Label for resource group {self.name} '
                                  f'has been calculated: {self.energy_label.label}')
                     break
@@ -466,7 +486,8 @@ class ResourceGroup:
                 self.energy_label = ResourceGroupEnergyLabel('F',  # pylint: disable=attribute-defined-outside-init
                                                              number_of_high_findings,
                                                              number_of_medium_findings,
-                                                             number_of_low_findings)
+                                                             number_of_low_findings,
+                                                             max_days_open)
         except Exception:  # pylint: disable=broad-except
             self._logger.exception(
                 f'Could not calculate energy label for resource group {self.name}, using the default "F"')
@@ -480,8 +501,6 @@ class Finding:
                  data
                  ):
         self._data = data
-
-    def __post_init__(self):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
 
     def __eq__(self, other):
@@ -582,12 +601,44 @@ class Finding:
         return self._data.get('controlName', '')
 
     @property
+    def first_evaluation_date(self):
+        """First Evaluation Date."""
+        first_evaluation_date = self._data.get('firstEvaluationDate', '').split('.')[0]
+        return self._parse_date_time(first_evaluation_date)
+
+    @property
+    def status_change_date(self):
+        """Status Change Date."""
+        status_change_date = self._data.get('statusChangeDate', '').split('.')[0]
+        return self._parse_date_time(status_change_date)
+
+    @staticmethod
+    def _parse_date_time(datetime_string):
+        try:
+            return datetime.strptime(datetime_string, '%Y-%m-%dT%H:%M:%S')
+        except ValueError:
+            return None
+
+    @property
+    def days_open(self):
+        """Days open."""
+        status_change_date = self.status_change_date
+        current_time = datetime.now()
+        try:
+            return (current_time - status_change_date).days
+        except Exception:  # pylint: disable=broad-except
+            self._logger.exception('Could not calculate number of days open, '
+                                   'last or first observation date is missing.')
+            return -1
+
+    @property
     def measurement_data(self):
         """Measurement data for computing the energy label."""
         return {
             'Subscription ID': self.subscription_id,
             'Resource Group Name': self.resource_group,
-            'Severity': self.severity
+            'Severity': self.severity,
+            'Days Open': self.days_open
         }
 
 

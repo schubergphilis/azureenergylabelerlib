@@ -51,12 +51,14 @@ LOGGER.addHandler(logging.NullHandler())
 resource_group_thresholds_schema = Schema([{'label': lambda label: label in ('A', 'B', 'C', 'D', 'E'),
                                             'high': And(int, lambda n: n >= 0),
                                             'medium': And(int, lambda n: n >= 0),
-                                            'low': And(int, lambda n: n >= 0)}])
+                                            'low': And(int, lambda n: n >= 0),
+                                            'days_open_less_than': And(int, lambda n: n > 0)}])
 
 subscription_thresholds_schema = Schema([{'label': lambda label: label in ('A', 'B', 'C', 'D', 'E'),
                                           'high': And(int, lambda n: n >= 0),
                                           'medium': And(int, lambda n: n >= 0),
-                                          'low': And(int, lambda n: n >= 0)}])
+                                          'low': And(int, lambda n: n >= 0),
+                                          'days_open_less_than': And(int, lambda n: n > 0)}])
 
 tenant_thresholds_schema = Schema([{'label': lambda label: label in ('A', 'B', 'C', 'D', 'E'),
                                     'percentage': And(int, lambda n: 0 <= n <= 100)}])
