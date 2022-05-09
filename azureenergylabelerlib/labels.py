@@ -82,6 +82,7 @@ class ResourceGroupEnergyLabel:
     number_of_low_findings: int = 9999
     max_days_open: int = 9999
 
+
 @dataclass
 class SubscriptionEnergyLabel:
     """Models the subscription energy label."""

@@ -51,7 +51,7 @@ from .configuration import (TENANT_THRESHOLDS,
                             ALL_TENANT_EXPORT_TYPES
                             )
 
-from .entities import Subscription
+from .entities import Subscription, DataExporter
 from .validations import (validate_subscription_ids,
                           are_valid_subscription_ids,
                           is_valid_subscription_id,
@@ -92,6 +92,7 @@ assert SUBSCRIPTION_METRIC_EXPORT_TYPES
 assert RESOURCE_GROUP_METRIC_EXPORT_TYPES
 
 assert Subscription
+assert DataExporter
 
 assert validate_subscription_ids
 assert are_valid_subscription_ids

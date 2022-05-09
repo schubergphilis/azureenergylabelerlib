@@ -494,7 +494,7 @@ class ResourceGroup:
         return self.energy_label
 
 
-class Finding:
+class Finding:  # pylint: disable=too-many-public-methods
     """Models a finding."""
 
     def __init__(self,
