@@ -74,7 +74,7 @@ class TenantEnergyLabel(AggregateEnergyLabel):
 
 @dataclass
 class ResourceGroupEnergyLabel:
-    """Models the account energy label."""
+    """Models the resource group energy label."""
 
     label: str = "F"
     number_of_high_findings: int = 9999
