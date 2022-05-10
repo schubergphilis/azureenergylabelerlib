@@ -51,7 +51,7 @@ LOGGER.addHandler(logging.NullHandler())
 
 @dataclass
 class AggregateEnergyLabel:
-    """Models an energy label averaging multiple account labels."""
+    """Models an energy label averaging multiple subscription labels."""
 
     label: str
     best_label: str

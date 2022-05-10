@@ -110,10 +110,10 @@ def validate_subscription_ids(subscription_ids):
 
 
 def validate_allowed_denied_subscription_ids(allowed_subscription_ids=None, denied_subscription_ids=None):
-    """Validates provided allow and deny account id lists.
+    """Validates provided allow and deny subscription id lists.
 
     Not both arguments can contain values as they are logically mutually exclusive. The validations process also
-    validates that the arguments contain valid account id values if provided.
+    validates that the arguments contain valid subscription id values if provided.
 
     Args:
         allowed_subscription_ids (str|iterable): A single or multiple subscription id to validate,
@@ -122,7 +122,7 @@ def validate_allowed_denied_subscription_ids(allowed_subscription_ids=None, deni
             mutually exclusive with the allow list
 
     Returns:
-        allowed_subscription_ids, denied_subscription_ids: A tuple of list values with valid account ids
+        allowed_subscription_ids, denied_subscription_ids: A tuple of list values with valid subscription ids
 
     Raises:
         MutuallyExclusiveArguments: If both arguments contain values.
