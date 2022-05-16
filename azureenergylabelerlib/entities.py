@@ -461,7 +461,7 @@ class Finding:  # pylint: disable=too-many-public-methods
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
 
     def __hash__(self):
-        return hash(self)
+        return hash(self.recommendation_id)
 
     def __eq__(self, other):
         """Override the default equals behavior."""
