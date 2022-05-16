@@ -54,9 +54,7 @@ from .validations import validate_allowed_denied_subscription_ids, DestinationPa
 from .azureenergylabelerlibexceptions import (SubscriptionNotPartOfTenant,
                                               InvalidFrameworks,
                                               InvalidPath)
-from .labels import (ResourceGroupEnergyLabel,
-                     TenantEnergyLabel,
-                     SubscriptionEnergyLabel,
+from .labels import (TenantEnergyLabel,
                      AggregateSubscriptionEnergyLabel)
 
 __author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
@@ -368,14 +366,14 @@ class Subscription:
                 policy_client.policy_exemptions.list()]
 
     def get_findings(self, findings):
-        """Findings for the subscription"""
+        """Findings for the subscription."""
         if not issubclass(DataFrame, type(findings)):
             findings = pd.DataFrame([finding.measurement_data for finding in findings])
         df = findings  # pylint: disable=invalid-name
         try:
             open_findings = df[(df['Subscription ID'] == self.subscription_id)]
         except KeyError:
-            self._logger.info(f'No findings for resource group {self.name}')
+            self._logger.info(f'No findings for resource group {self.subscription_id}')
             open_findings = pd.DataFrame([])
         return open_findings
 
@@ -424,7 +422,7 @@ class ResourceGroup:
         return "resource_group"
 
     def get_findings(self, findings):
-        """Findings for the resource group"""
+        """Findings for the resource group."""
         if not issubclass(DataFrame, type(findings)):
             findings = pd.DataFrame([finding.measurement_data for finding in findings])
         df = findings  # pylint: disable=invalid-name
@@ -758,8 +756,8 @@ class DataFileFactory:  # pylint: disable=too-few-public-methods
         return obj(**arguments)
 
 
-class EnergyLabel:
-    """"""
+class EnergyLabel:  # pylint: disable=too-few-public-methods
+    """Generic EnergyLabel factory to return energy label for resource groups and subscriptions."""
 
     def __init__(self, object_type, name, findings, threshold):
         self.findings = findings
@@ -777,8 +775,9 @@ class EnergyLabel:
 
     @property
     def energy_label(self):
+        """Energy Label for the subscription or resource group."""
         if self.findings.empty:
-            energy_label = self.energy_label_class('A', 0, 0, 0)  # pylint: disable=attribute-defined-outside-init
+            energy_label = self.energy_label_class('A', 0, 0, 0)
             return energy_label
         try:
             number_of_high_findings = self.findings[self.findings['Severity'] == 'High'].shape[0]
@@ -804,7 +803,6 @@ class EnergyLabel:
                         number_of_low_findings <= threshold['low'],
                         max_days_open < threshold['days_open_less_than']]):
                     energy_label = self.energy_label_class(threshold['label'],
-                                                           # pylint: disable=attribute-defined-outside-init
                                                            number_of_high_findings,
                                                            number_of_medium_findings,
                                                            number_of_low_findings,
@@ -813,7 +811,7 @@ class EnergyLabel:
                                  f'has been calculated: {energy_label.label}')
                     break
                 LOGGER.debug('No match with thresholds for energy label, using default worst one.')
-                energy_label = self.energy_label_class('F',  # pylint: disable=attribute-defined-outside-init
+                energy_label = self.energy_label_class('F',
                                                        number_of_high_findings,
                                                        number_of_medium_findings,
                                                        number_of_low_findings,
