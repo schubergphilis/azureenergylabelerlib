@@ -321,7 +321,7 @@ class Subscription:
     @property
     def _type(self):
         """Type of the azure resource."""
-        return "subscription"
+        return 'subscription'
 
     @property
     def _id(self):
@@ -419,7 +419,7 @@ class ResourceGroup:
     @property
     def _type(self):
         """Azure resource type."""
-        return "resource_group"
+        return 'resource_group'
 
     def get_findings(self, findings):
         """Findings for the resource group."""
