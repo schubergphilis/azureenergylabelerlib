@@ -35,7 +35,8 @@ import logging
 from .datamodels import (TenantEnergyLabelingData,
                          LabeledResourceGroupsData,
                          LabeledSubscriptionsData,
-                         DefenderForCloudFindingsData)
+                         DefenderForCloudFindingsData,
+                         SubscriptionExemptedPolicies)
 
 __author__ = 'Sayantan Khanra <ctyfoxylos@schubergphilis.com>'
 __docformat__ = '''google'''
@@ -54,11 +55,12 @@ FINDINGS_QUERY_STRING = "    securityresources\
     | where type == \"microsoft.security/regulatorycompliancestandards/regulatorycompliancecontrols/regulatorycomplianceassessments\"\
     | extend complianceStandardId = replace( \"-\", \" \", extract(@'/regulatoryComplianceStandards/([^/]*)', 1, id))\
     | where complianceStandardId ==  \"{framework}\"\
-    | extend failedResources = toint(properties.failedResources)\
-    | where failedResources > 0 or properties.assessmentType == \"MicrosoftManaged\"\
+    | extend failedResources = toint(properties.failedResources),skippedResources=toint(properties.skippedResources)\
+    | where failedResources + skippedResources > 0 or properties.assessmentType == \"MicrosoftManaged\"\
     | join kind = leftouter(\
     securityresources\
     | where type == \"microsoft.security/assessments\") on subscriptionId, name\
+    | where properties.state != \"Passed\"\
     | extend firstEvaluationDate = tostring(properties1.status.firstEvaluationDate)\
     | extend statusChangeDate = tostring(properties1.status.statusChangeDate)\
     | extend complianceState = tostring(properties.state)\
@@ -90,7 +92,7 @@ FINDINGS_QUERY_STRING = "    securityresources\
     | join kind = leftouter (securityresources\
     | where type == \"microsoft.security/regulatorycompliancestandards/regulatorycompliancecontrols\"\
     | extend complianceStandardId = replace( \"-\", \" \", extract(@'/regulatoryComplianceStandards/([^/]*)', 1, id))\
-    | where complianceStandardId == \"{framework}\"\
+    | where complianceStandardId == \"Azure Security Benchmark\"\
     | extend  controlName = tostring(properties.description)\
     | project controlId = name, controlName\
     | distinct  *) on $right.controlId == $left.complianceControlId\
@@ -179,6 +181,10 @@ FILE_EXPORT_TYPES = [
     {'type': 'subscription_energy_label',
      'filename': 'subscription-energy-label.json',
      'object_type': LabeledSubscriptionsData,
+     'required_arguments': ['labeled_subscriptions']},
+    {'type': 'exempted_policies',
+     'filename': 'exemtped-policies.json',
+     'object_type': SubscriptionExemptedPolicies,
      'required_arguments': ['labeled_subscriptions']},
     {'type': 'resource_group_energy_label',
      'filename': 'resource-group-energy-label.json',

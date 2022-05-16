@@ -101,6 +101,38 @@ class DefenderForCloudFindingsData:  # pylint: disable=too-few-public-methods
                            for finding in self._defender_for_cloud_findings], indent=2, default=str)
 
 
+class SubscriptionExemptedPolicies:
+    """Models the data for exempted policies to export."""
+
+    def __init__(self, filename, labeled_subscriptions):
+        self.filename = filename
+        self._labeled_subscriptions = labeled_subscriptions
+
+    @property
+    def data(self):
+        """Data of an subscription exempted policies to export."""
+        exempted_policies = []
+        for subscription in self._labeled_subscriptions:
+            for exempted_policy in subscription.exempted_policies:
+                exempted_policies.append({'Subscription ID': subscription.subscription_id,
+                                          'Created At': exempted_policy.created_at,
+                                          'Created By': exempted_policy.created_by,
+                                          'Description': exempted_policy.description,
+                                          'Display Name': exempted_policy.display_name,
+                                          'Exemption Category': exempted_policy.exemption_category,
+                                          'Last Modified By': exempted_policy.last_modified_by,
+                                          'Last Modified At': exempted_policy.last_modified_at,
+                                          'Name': exempted_policy.name,
+                                          'Expires On': exempted_policy.expires_on
+                                          })
+        return exempted_policies
+
+    @property
+    def json(self):
+        """Data to json."""
+        return json.dumps(self.data, indent=2, default=str)
+
+
 class LabeledSubscriptionData:
     """Models the data for energy labeling to export."""
 

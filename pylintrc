@@ -1,6 +1,6 @@
 [FORMAT]
 max-line-length=151
-disable=locally-disabled, locally-enabled, logging-format-interpolation,  logging-fstring-interpolation
+disable=locally-disabled, locally-enabled, logging-format-interpolation,  logging-fstring-interpolation, line-too-long
 
 [General]
 init-hook='import sys; sys.path.append("azureenergylabelerlib")'

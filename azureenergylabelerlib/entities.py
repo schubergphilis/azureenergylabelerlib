@@ -42,6 +42,7 @@ from pandas.core.frame import DataFrame
 import pandas as pd
 from azure.mgmt.resource import SubscriptionClient, ResourceManagementClient
 from azure.storage.blob import BlobServiceClient
+from azure.mgmt.resource.policy import PolicyClient
 import azure.mgmt.resourcegraph as arg
 from .configuration import (TENANT_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
@@ -350,6 +351,14 @@ class Subscription:
         return [ResourceGroup(resource_group_detail) for resource_group_detail in
                 resource_group_client.resource_groups.list()]
 
+    @property
+    @cached(cache=TTLCache(maxsize=1000, ttl=600))
+    def exempted_policies(self):
+        """Policies exempted for this subscription."""
+        policy_client = PolicyClient(credential=self._credential, subscription_id=self.subscription_id)
+        return [ExemptedPolicy(exempted_policy_detail) for exempted_policy_detail in
+                policy_client.policy_exemptions.list()]
+
     def get_energy_label(self, findings):
         """Calculates the energy label based on the subscription findings.
 
@@ -502,6 +511,7 @@ class Finding:  # pylint: disable=too-many-public-methods
                  ):
         self._data = data
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
+        print(self._data)
 
     def __eq__(self, other):
         """Override the default equals behavior."""
@@ -601,6 +611,11 @@ class Finding:  # pylint: disable=too-many-public-methods
         return self._data.get('controlName', '')
 
     @property
+    def not_applicable_reason(self):
+        """Control Name."""
+        return self._data.get('notApplicableReason', '')
+
+    @property
     def first_evaluation_date(self):
         """First Evaluation Date."""
         first_evaluation_date = self._data.get('firstEvaluationDate', '').split('.')[0]
@@ -640,6 +655,71 @@ class Finding:  # pylint: disable=too-many-public-methods
             'Severity': self.severity,
             'Days Open': self.days_open
         }
+
+
+class ExemptedPolicy:
+    """Defines an Exempted Defender For Cloud Policy data."""
+
+    def __init__(self,
+                 data
+                 ):
+        self._data = data
+        self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
+
+    @property
+    def created_by(self):
+        """Created by which user."""
+        return self._data.system_data.created_by
+
+    @property
+    def created_at(self):
+        """At what time the exemption was created."""
+        return self._data.system_data.created_at
+
+    @property
+    def last_modified_by(self):
+        """Last modified by which user."""
+        return self._data.system_data.last_modified_by
+
+    @property
+    def last_modified_at(self):
+        """Last modified at."""
+        return self._data.system_data.last_modified_at
+
+    @property
+    def id(self):  # pylint: disable=invalid-name
+        """Id."""
+        return self._data.id
+
+    @property
+    def name(self):
+        """Name."""
+        return self._data.name
+
+    @property
+    def type(self):
+        """Type of the resource."""
+        return self._data.type
+
+    @property
+    def exemption_category(self):
+        """Exemption category."""
+        return self._data.exemption_category
+
+    @property
+    def expires_on(self):
+        """Exemption expires on."""
+        return self._data.expires_on
+
+    @property
+    def display_name(self):
+        """Display Name of the policy/recommendation."""
+        return self._data.display_name.split('ASC-')[1]
+
+    @property
+    def description(self):
+        """Description."""
+        return self._data.description
 
 
 class DataExporter:  # pylint: disable=too-few-public-methods
