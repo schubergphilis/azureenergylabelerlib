@@ -32,7 +32,6 @@ Main code for azureenergylabelerlib.
 """
 import logging
 from cachetools import cached, TTLCache
-from azure.identity import ClientSecretCredential
 from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
@@ -65,8 +64,7 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
     # pylint: disable=dangerous-default-value
     def __init__(self,
                  tenant_id,
-                 client_id,
-                 client_secret,
+                 credentials,
                  frameworks=DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
                  tenant_thresholds=TENANT_THRESHOLDS,
                  resource_group_thresholds=RESOURCE_GROUP_THRESHOLDS,
@@ -76,11 +74,10 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
                  ):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
         self._tenant_id = tenant_id
-        self._client_id = client_id
         self.resource_group_thresholds = resource_group_thresholds_schema.validate(resource_group_thresholds)
         self.tenant_thresholds = tenant_thresholds_schema.validate(tenant_thresholds)
         self.subscription_thresolds = subscription_thresholds_schema.validate(subscription_thresholds)
-        self.tenant_credentials = ClientSecretCredential(tenant_id, client_id, client_secret)
+        self.tenant_credentials = credentials
         self.allowed_subscription_ids = allowed_subscription_ids
         self.denied_subscription_ids = denied_subscription_ids
         self._tenant = Tenant(credential=self.tenant_credentials,
