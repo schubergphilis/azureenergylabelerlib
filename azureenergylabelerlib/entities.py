@@ -155,12 +155,12 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
         self._targeted_subscriptions_energy_label = None
 
     @staticmethod
-    def _validate_tenant_subscription_ids(subscription_ids, tenant_account_ids):
-        """Validates that a provided list of valid Azure subscription ids are actually part of the landing zone.
+    def _validate_tenant_subscription_ids(subscription_ids, tenant_subscription_ids):
+        """Validates that a provided list of valid Azure subscription ids are actually part of the tenant.
 
         Args:
             subscription_ids: A list of valid Azure subscription ids.
-            tenant_account_ids: All the tenant subscription ids.
+            tenant_subscription_ids: All the tenant subscription ids.
 
         Returns:
             subscription_ids (list): A list of subscription ids that are part of the tenant.
@@ -169,7 +169,7 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
             SubscriptionNotPartOfTenant: If subscription ids are not part of the current tenant.
 
         """
-        subscriptions_not_in_tenant = set(subscription_ids) - set(tenant_account_ids)
+        subscriptions_not_in_tenant = set(subscription_ids) - set(tenant_subscription_ids)
         if subscriptions_not_in_tenant:
             raise SubscriptionNotPartOfTenant(f'The following subscription ids provided are not part of the tenant :'
                                               f' {subscriptions_not_in_tenant}')
@@ -719,7 +719,7 @@ class DataExporter:  # pylint: disable=too-few-public-methods
         self._logger.info(f'File {filename} copied to {directory}')
 
     def _export_to_blob(self, blob_url, filename, data):
-        """Exports as json to S3 object storage."""
+        """Exports as json to Blob container object storage."""
         _parsed_url = urlparse(blob_url)
         blob_service_client = BlobServiceClient(account_url=f'{_parsed_url.scheme}://{_parsed_url.netloc}/',
                                                 credential=self._credentials)
