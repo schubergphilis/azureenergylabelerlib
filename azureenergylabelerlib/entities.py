@@ -790,13 +790,13 @@ class EnergyLabel:  # pylint: disable=too-few-public-methods
                 if open_findings_low_or_higher['Days Open'].shape[0] > 0 else 0
 
             self._logger.debug(f'Calculating for {self.object_type} {self.name} '
-                         f'with number of high findings '
-                         f'{number_of_high_findings}, '
-                         f'number of medium findings {number_of_medium_findings}, '
-                         f'number of low findings {number_of_low_findings}, '
-                         f'and findings have been open for over '
-                         f'{max_days_open} days'
-                         )
+                               f'with number of high findings '
+                               f'{number_of_high_findings}, '
+                               f'number of medium findings {number_of_medium_findings}, '
+                               f'number of low findings {number_of_low_findings}, '
+                               f'and findings have been open for over '
+                               f'{max_days_open} days'
+                               )
             for threshold in self.threshold:
                 if all([number_of_high_findings <= threshold['high'],
                         number_of_medium_findings <= threshold['medium'],
@@ -808,7 +808,7 @@ class EnergyLabel:  # pylint: disable=too-few-public-methods
                                                            number_of_low_findings,
                                                            max_days_open)
                     self._logger.debug(f'Energy Label for {self.object_type} {self.name} '
-                                 f'has been calculated: {energy_label.label}')
+                                       f'has been calculated: {energy_label.label}')
                     break
                 self._logger.debug('No match with thresholds for energy label, using default worst one.')
                 energy_label = self.energy_label_class('F',
