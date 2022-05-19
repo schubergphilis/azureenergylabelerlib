@@ -33,15 +33,15 @@ Main code for azureenergylabelerlib.
 import logging
 from cachetools import cached, TTLCache
 
+from azure.core.credentials import TokenCredential
+from azure.core.exceptions import ClientAuthenticationError
+from azure.identity import DefaultAzureCredential
+from azure.mgmt.resource import SubscriptionClient
 from .azureenergylabelerlibexceptions import InvalidCredentials
 from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
                             DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS)
-from azure.core.credentials import TokenCredential
-from azure.core.exceptions import ClientAuthenticationError
-from azure.identity import DefaultAzureCredential
-from azure.mgmt.resource import SubscriptionClient
 from .entities import DefenderForCloud, Tenant
 from .schemas import (resource_group_thresholds_schema,
                       subscription_thresholds_schema,
@@ -96,6 +96,7 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
         Inclusion list of subscripitions to be evaluated
     denied_subscription_ids : Any
         Exclude list of subscriptions to be evaluated
+
     """
 
     # pylint: disable=dangerous-default-value
