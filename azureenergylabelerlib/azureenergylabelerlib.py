@@ -36,6 +36,8 @@ from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
                             DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS)
+from azure.core.exceptions import ClientAuthenticationError
+from azure.identity import DefaultAzureCredential
 from .entities import DefenderForCloud, Tenant
 from .schemas import (resource_group_thresholds_schema,
                       subscription_thresholds_schema,
@@ -59,16 +61,47 @@ LOGGER.addHandler(logging.NullHandler())
 
 
 class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-attributes
-    """Labeling subscriptions based on findings and label configurations."""
+    """Labeling subscriptions based on findings and label configurations.
+
+    Parameters
+    ----------
+    tenant_id : str
+        Azure Tenant ID to collect energy label, for example: `18d9dec0-d762-11ec-9cb5-00155da09878`.
+    frameworks : set[str]
+        Frameworks taken into account when generating the energy label. Defaults to :data:`~azureenergylabelerlib.configuration.DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS`
+    tenant_thresholds : list[dict[str, Any]]
+        Defines percentage thresholds mapping to energy labels for the tenant. Defaults to :data:`~azureenergylabelerlib.configuration.TENANT_THRESHOLDS`
+    resource_group_thresholds : list[dict[str, Any]]
+        Defines percentage thresholds mapping to energy labels for resource groups. Defaults to :data:`~azureenergylabelerlib.configuration.RESOURCE_GROUP_THRESHOLDS`
+    subscription_thresholds : list[dict[str, Any]]
+        Defines percentage thresholds mapping to energy labels for resource groups. Defaults to :data:`~azureenergylabelerlib.configuration.SUBSCRIPTION_THRESHOLDS`
+    credentials : :py:class:`~azure.core.credentials.TokenCredential`
+        :py:class:`~azure.core.credentials.TokenCredential` object containing the credentials used to access the Azure API.
+        If not supplied, the library will create a :py:class:`~azure.identity.DefaultAzureCredential`
+        and attempt to authenticate in the following order:
+        1. A service principal configured by environment variables. See :class:`~azure.identity.EnvironmentCredential`
+            for more details.
+        2. An Azure managed identity. See :class:`~azure.identity.ManagedIdentityCredential` for more details.
+        3. On Windows only: a user who has signed in with a Microsoft application, such as Visual Studio. If multiple
+            identities are in the cache, then the value of  the environment variable ``AZURE_USERNAME`` is used to select
+            which identity to use. See :class:`~azure.identity.SharedTokenCacheCredential` for more details.
+        4. The user currently signed in to Visual Studio Code.
+        5. The identity currently logged in to the Azure CLI.
+        6. The identity currently logged in to Azure PowerShell.
+    allowed_subscription_ids : Any
+        Inclusion list of subscripitions to be evaluated
+    denied_subscription_ids : Any
+        Exclude list of subscriptions to be evaluated
+    """
 
     # pylint: disable=dangerous-default-value
     def __init__(self,
                  tenant_id,
-                 credentials,
                  frameworks=DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
                  tenant_thresholds=TENANT_THRESHOLDS,
                  resource_group_thresholds=RESOURCE_GROUP_THRESHOLDS,
                  subscription_thresholds=SUBSCRIPTION_THRESHOLDS,
+                 credentials=None,
                  allowed_subscription_ids=None,
                  denied_subscription_ids=None,
                  ):
@@ -77,7 +110,7 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
         self.resource_group_thresholds = resource_group_thresholds_schema.validate(resource_group_thresholds)
         self.tenant_thresholds = tenant_thresholds_schema.validate(tenant_thresholds)
         self.subscription_thresolds = subscription_thresholds_schema.validate(subscription_thresholds)
-        self.tenant_credentials = credentials
+        self.tenant_credentials = self._fetch_credentials(credentials)
         self.allowed_subscription_ids = allowed_subscription_ids
         self.denied_subscription_ids = denied_subscription_ids
         self._tenant = Tenant(credential=self.tenant_credentials,
@@ -92,6 +125,12 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
         self._tenant_energy_label = None
         self._labeled_subscriptions_energy_label = None
         self._tenant_labeled_subscriptions = None
+
+    def _fetch_credentials(self, credentials):
+        if credentials:
+            return credentials
+
+        return DefaultAzureCredential()
 
     def _initialize_defender_for_cloud(self, credential):
         """Initialize defender for cloud."""
