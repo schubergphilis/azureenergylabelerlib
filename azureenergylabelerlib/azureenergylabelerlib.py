@@ -32,12 +32,16 @@ Main code for azureenergylabelerlib.
 """
 import logging
 from cachetools import cached, TTLCache
+
+from .azureenergylabelerlibexceptions import InvalidCredentials
 from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
                             DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS)
+from azure.core.credentials import TokenCredential
 from azure.core.exceptions import ClientAuthenticationError
 from azure.identity import DefaultAzureCredential
+from azure.mgmt.resource import SubscriptionClient
 from .entities import DefenderForCloud, Tenant
 from .schemas import (resource_group_thresholds_schema,
                       subscription_thresholds_schema,
@@ -75,8 +79,8 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
         Defines percentage thresholds mapping to energy labels for resource groups. Defaults to :data:`~azureenergylabelerlib.configuration.RESOURCE_GROUP_THRESHOLDS`
     subscription_thresholds : list[dict[str, Any]]
         Defines percentage thresholds mapping to energy labels for resource groups. Defaults to :data:`~azureenergylabelerlib.configuration.SUBSCRIPTION_THRESHOLDS`
-    credentials : :py:class:`~azure.core.credentials.TokenCredential`
-        :py:class:`~azure.core.credentials.TokenCredential` object containing the credentials used to access the Azure API.
+    credentials : Any
+        One of :py:class:`~azure.identity` Credential object containing the credentials used to access the Azure API.
         If not supplied, the library will create a :py:class:`~azure.identity.DefaultAzureCredential`
         and attempt to authenticate in the following order:
         1. A service principal configured by environment variables. See :class:`~azure.identity.EnvironmentCredential`
@@ -126,11 +130,17 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
         self._labeled_subscriptions_energy_label = None
         self._tenant_labeled_subscriptions = None
 
-    def _fetch_credentials(self, credentials):
-        if credentials:
-            return credentials
+    def _fetch_credentials(self, credentials=None):
+        credentials = credentials if credentials else DefaultAzureCredential()
+        try:
+            subscription_client = SubscriptionClient(credentials)
+            subscriptions = [subscription.display_name for subscription in subscription_client.subscriptions.list()]
+            self._logger.info(f'Credentials valid for: {subscriptions}')
+        except ClientAuthenticationError:
+            self._logger.error('Invalid Azure credentials')
+            raise InvalidCredentials
 
-        return DefaultAzureCredential()
+        return credentials
 
     def _initialize_defender_for_cloud(self, credential):
         """Initialize defender for cloud."""
