@@ -33,7 +33,6 @@ Main code for azureenergylabelerlib.
 import logging
 from cachetools import cached, TTLCache
 
-from azure.core.credentials import TokenCredential
 from azure.core.exceptions import ClientAuthenticationError
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.resource import SubscriptionClient
