@@ -137,7 +137,7 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
             subscriptions = [subscription.display_name for subscription in subscription_client.subscriptions.list()]
             self._logger.info(f'Credentials valid for: {subscriptions}')
         except ClientAuthenticationError as error:
-            raise InvalidCredentials(error)
+            raise InvalidCredentials(error) from None
 
         return credentials
 
