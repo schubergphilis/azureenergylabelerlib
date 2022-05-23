@@ -136,9 +136,8 @@ class EnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-a
             subscription_client = SubscriptionClient(credentials)
             subscriptions = [subscription.display_name for subscription in subscription_client.subscriptions.list()]
             self._logger.info(f'Credentials valid for: {subscriptions}')
-        except ClientAuthenticationError:
-            self._logger.error('Invalid Azure credentials')
-            raise InvalidCredentials
+        except ClientAuthenticationError as error:
+            raise InvalidCredentials(error)
 
         return credentials
 
