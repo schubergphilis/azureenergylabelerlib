@@ -32,7 +32,7 @@ Import all parts from azureenergylabelerlib here
    http://google.github.io/styleguide/pyguide.html
 """
 from ._version import __version__
-from .azureenergylabelerlib import EnergyLabeler, Tenant, DefenderForCloud
+from .azureenergylabelerlib import AzureEnergyLabeler, Tenant, DefenderForCloud
 from .azureenergylabelerlibexceptions import (InvalidFrameworks,
                                               InvalidSubscriptionListProvided,
                                               MutuallyExclusiveArguments,
@@ -70,7 +70,7 @@ __status__ = '''Development'''  # "Prototype", "Development", "Production".
 # This is to 'use' the module(s), so lint doesn't complain
 assert __version__
 
-assert EnergyLabeler
+assert AzureEnergyLabeler
 assert Tenant
 assert DefenderForCloud
 

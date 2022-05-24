@@ -365,7 +365,7 @@ class Subscription:
         return [ExemptedPolicy(exempted_policy_detail) for exempted_policy_detail in
                 policy_client.policy_exemptions.list()]
 
-    def get_findings(self, findings):
+    def get_open_findings(self, findings):
         """Findings for the subscription."""
         if not issubclass(DataFrame, type(findings)):
             findings = pd.DataFrame([finding.measurement_data for finding in findings])
@@ -387,13 +387,11 @@ class Subscription:
             The energy label of the resource group based on the provided configuration.
 
         """
-        energy_label = EnergyLabel(findings=self.get_findings(findings),
-                                   threshold=self._threshold,
-                                   object_type=self._type,
-                                   name=self.subscription_id
-                                   )
-        energy_label = energy_label.energy_label
-        return energy_label
+        return EnergyLabeler(findings=self.get_open_findings(findings),
+                             threshold=self._threshold,
+                             object_type=self._type,
+                             name=self.subscription_id
+                             ).energy_label
 
 
 class ResourceGroup:
@@ -421,7 +419,7 @@ class ResourceGroup:
         """Azure resource type."""
         return 'resource_group'
 
-    def get_findings(self, findings):
+    def get_open_findings(self, findings):
         """Findings for the resource group."""
         if not issubclass(DataFrame, type(findings)):
             findings = pd.DataFrame([finding.measurement_data for finding in findings])
@@ -443,12 +441,11 @@ class ResourceGroup:
             The energy label of the resource group based on the provided configuration.
 
         """
-        energy_label = EnergyLabel(findings=self.get_findings(findings),
-                                   threshold=self._threshold,
-                                   object_type=self._type,
-                                   name=self.name
-                                   )
-        return energy_label.energy_label
+        return EnergyLabeler(findings=self.get_open_findings(findings),
+                             threshold=self._threshold,
+                             object_type=self._type,
+                             name=self.name
+                             ).energy_label
 
 
 class Finding:  # pylint: disable=too-many-public-methods
@@ -756,7 +753,7 @@ class DataFileFactory:  # pylint: disable=too-few-public-methods
         return obj(**arguments)
 
 
-class EnergyLabel:  # pylint: disable=too-few-public-methods
+class EnergyLabeler:  # pylint: disable=too-few-public-methods
     """Generic EnergyLabel factory to return energy label for resource groups and subscriptions."""
 
     def __init__(self, object_type, name, findings, threshold):
@@ -777,8 +774,7 @@ class EnergyLabel:  # pylint: disable=too-few-public-methods
     def energy_label(self):
         """Energy Label for the subscription or resource group."""
         if self.findings.empty:
-            energy_label = self.energy_label_class('A', 0, 0, 0)
-            return energy_label
+            return self.energy_label_class('A', 0, 0, 0)
         try:
             number_of_high_findings = self.findings[self.findings['Severity'] == 'High'].shape[0]
             number_of_medium_findings = self.findings[self.findings['Severity'] == 'Medium'].shape[0]
