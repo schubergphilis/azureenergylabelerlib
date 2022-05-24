@@ -54,6 +54,10 @@ class SubscriptionNotPartOfTenant(Exception):
     """If subscription ids are provided but are not part of the tenant."""
 
 
+class InvalidCredentials(Exception):
+    """Credentials provided are not valid."""
+
+
 class InvalidFrameworks(Exception):
     """The frameworks provided are not valid."""
 
