@@ -37,4 +37,4 @@ cachetools = "~=4.2.4"
 opnieuw = "~=1.1.0"
 
 [requires]
-python_version = "3.7"
+python_version = "3"
