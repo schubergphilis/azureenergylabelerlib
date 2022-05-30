@@ -77,9 +77,7 @@ class DefenderForCloud:
 
     frameworks = {'Azure Security Benchmark',
                   'SOC TSP',
-                  'Azure CIS 1.1.0',
-                  'ISO 27001',
-                  'PCI DSS 3.2.1'}
+                  'Azure CIS 1.1.0'}
 
     def __init__(self,
                  credential,
