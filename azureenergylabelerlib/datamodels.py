@@ -98,7 +98,8 @@ class DefenderForCloudFindingsData:  # pylint: disable=too-few-public-methods
                             'Control Name': finding.control_name,
                             'Days Open': finding.days_open
                             }
-                           for finding in self._defender_for_cloud_findings], indent=2, default=str)
+                           for finding in self._defender_for_cloud_findings if finding.compliance_state.lower() != 'skipped'],
+                          indent=2, default=str)
 
 
 class SubscriptionExemptedPolicies:
