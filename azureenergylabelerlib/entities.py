@@ -112,7 +112,7 @@ class DefenderForCloud:
             findings (list(Findings)): A list of findings matching the provided frameworks
 
         """
-        finding_details_list = []
+        finding_details_set = set()
         arg_client = arg.ResourceGraphClient(self._credential)
         arg_query_options = arg.models.QueryRequestOptions(result_format="objectArray")
         frameworks = DefenderForCloud.validate_frameworks(frameworks)
@@ -122,8 +122,8 @@ class DefenderForCloud:
                                                 options=arg_query_options)
             finding_data = arg_client.resources(arg_query).data
             for finding_details in finding_data:
-                finding_details_list.append(Finding(finding_details))
-        return finding_details_list
+                finding_details_set.add(Finding(finding_details))
+        return list(finding_details_set)
 
 
 class Tenant:  # pylint: disable=too-many-instance-attributes
