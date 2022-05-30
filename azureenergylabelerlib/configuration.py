@@ -164,7 +164,11 @@ RESOURCE_GROUP_THRESHOLDS = [{'label': 'A',
                               'low': 100,
                               'days_open_less_than': 999}]
 
-DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Azure Security Benchmark', 'SOC TSP', 'Azure CIS 1.1.0'}
+DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Azure Security Benchmark',
+                                         'SOC TSP',
+                                         'Azure CIS 1.1.0',
+                                         'ISO 27001',
+                                         'PCI DSS 3.2.1'}
 
 FILE_EXPORT_TYPES = [
     {'type': 'tenant_energy_label',
