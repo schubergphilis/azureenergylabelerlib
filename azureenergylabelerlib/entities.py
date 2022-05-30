@@ -375,7 +375,7 @@ class Subscription:
         try:
             open_findings = df[(df['Subscription ID'] == self.subscription_id)]
         except KeyError:
-            self._logger.info(f'No findings for resource group {self.subscription_id}')
+            self._logger.info(f'No findings for subscription {self.subscription_id}')
             open_findings = pd.DataFrame([])
         return open_findings
 
@@ -719,10 +719,10 @@ class DataExporter:  # pylint: disable=too-few-public-methods
 
     def _export_to_blob(self, blob_url, filename, data):
         """Exports as json to Blob container object storage."""
-        _parsed_url = urlparse(blob_url)
-        blob_service_client = BlobServiceClient(account_url=f'{_parsed_url.scheme}://{_parsed_url.netloc}/',
+        parsed_url = urlparse(blob_url)
+        blob_service_client = BlobServiceClient(account_url=f'{parsed_url.scheme}://{parsed_url.netloc}/',
                                                 credential=self._credentials)
-        container = _parsed_url.path.split('/')[1]
+        container = parsed_url.path.split('/')[1]
         blob_client = blob_service_client.get_blob_client(container=container, blob=filename)
         try:
             blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
