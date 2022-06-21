@@ -595,6 +595,11 @@ class Finding:  # pylint: disable=too-many-public-methods
             return -1
 
     @property
+    def is_skipped(self):
+        """The finding is skipped or not."""
+        return self.compliance_state.lower() == 'skipped'
+
+    @property
     def measurement_data(self):
         """Measurement data for computing the energy label."""
         return {
@@ -816,4 +821,5 @@ class EnergyLabeler:  # pylint: disable=too-few-public-methods
         except Exception:  # pylint: disable=broad-except
             self._logger.exception(
                 f'Could not calculate energy label for {self.object_type} {self.name}, using the default "F"')
+            energy_label = self.energy_label_class('F', 0, 0, 0)
         return energy_label
