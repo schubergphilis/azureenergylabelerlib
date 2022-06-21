@@ -76,7 +76,6 @@ class DefenderForCloud:
     """Models the Defender for Cloud and retrieves findings."""
 
     frameworks = {'Azure Security Benchmark',
-                  'SOC TSP',
                   'Azure CIS 1.1.0'}
 
     def __init__(self,
