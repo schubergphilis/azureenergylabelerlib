@@ -98,7 +98,8 @@ class DefenderForCloudFindingsData:  # pylint: disable=too-few-public-methods
                             'Control Name': finding.control_name,
                             'Days Open': finding.days_open
                             }
-                           for finding in self._defender_for_cloud_findings], indent=2, default=str)
+                           for finding in self._defender_for_cloud_findings if not finding.is_skipped],
+                          indent=2, default=str)
 
 
 class SubscriptionExemptedPolicies:
@@ -136,21 +137,22 @@ class SubscriptionExemptedPolicies:
 class LabeledSubscriptionData:
     """Models the data for energy labeling to export."""
 
-    def __init__(self, filename, labeled_subscription):
+    def __init__(self, filename, labeled_subscription, defender_for_cloud_findings):
         self.filename = filename
         self._labeled_subscription = labeled_subscription
+        self._defender_for_cloud_findings = defender_for_cloud_findings
 
     @property
     def data(self):
         """Data of an subscription to export."""
+        energy_label = self._labeled_subscription.get_energy_label(self._defender_for_cloud_findings)
         return {'Subscription ID': self._labeled_subscription.subscription_id,
                 'Subscription Display Name': self._labeled_subscription.display_name,
-                'Number of high findings':
-                    self._labeled_subscription.energy_label.number_of_high_findings,
-                'Number of medium findings': self._labeled_subscription.energy_label.number_of_medium_findings,
-                'Number of low findings': self._labeled_subscription.energy_label.number_of_low_findings,
-                'Number of maximum days open': self._labeled_subscription.energy_label.max_days_open,
-                'Energy Label': self._labeled_subscription.energy_label.label}
+                'Number of high findings': energy_label.number_of_high_findings,
+                'Number of medium findings': energy_label.number_of_medium_findings,
+                'Number of low findings': energy_label.number_of_low_findings,
+                'Number of maximum days open': energy_label.max_days_open,
+                'Energy Label': energy_label.label}
 
     @property
     def json(self):
@@ -213,12 +215,13 @@ class LabeledResourceGroupsData:  # pylint: disable=too-few-public-methods
 class LabeledSubscriptionsData:  # pylint: disable=too-few-public-methods
     """Models the data for energy labeling to export."""
 
-    def __init__(self, filename, labeled_subscriptions):
+    def __init__(self, filename, labeled_subscriptions, defender_for_cloud_findings):
         self.filename = filename
         self._labeled_subscriptions = labeled_subscriptions
+        self.defender_for_cloud_findings = defender_for_cloud_findings
 
     @property
     def json(self):
         """Data to json."""
-        return json.dumps([LabeledSubscriptionData(self.filename, subscription).data
+        return json.dumps([LabeledSubscriptionData(self.filename, subscription, self.defender_for_cloud_findings).data
                            for subscription in self._labeled_subscriptions], indent=2, default=str)

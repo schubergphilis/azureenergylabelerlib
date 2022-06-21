@@ -37,6 +37,7 @@ from .datamodels import (TenantEnergyLabelingData,
                          LabeledSubscriptionsData,
                          DefenderForCloudFindingsData,
                          SubscriptionExemptedPolicies)
+from .labels import ResourceGroupEnergyLabel, SubscriptionEnergyLabel
 
 __author__ = 'Sayantan Khanra <ctyfoxylos@schubergphilis.com>'
 __docformat__ = '''google'''
@@ -163,7 +164,8 @@ RESOURCE_GROUP_THRESHOLDS = [{'label': 'A',
                               'low': 100,
                               'days_open_less_than': 999}]
 
-DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Azure Security Benchmark', 'SOC TSP', 'Azure CIS 1.1.0'}
+DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Azure Security Benchmark',
+                                         'Azure CIS 1.1.0'}
 
 FILE_EXPORT_TYPES = [
     {'type': 'tenant_energy_label',
@@ -181,7 +183,7 @@ FILE_EXPORT_TYPES = [
     {'type': 'subscription_energy_label',
      'filename': 'subscription-energy-label.json',
      'object_type': LabeledSubscriptionsData,
-     'required_arguments': ['labeled_subscriptions']},
+     'required_arguments': ['labeled_subscriptions', 'defender_for_cloud_findings']},
     {'type': 'exempted_policies',
      'filename': 'exemtped-policies.json',
      'object_type': SubscriptionExemptedPolicies,
@@ -203,3 +205,16 @@ TENANT_METRIC_EXPORT_TYPES = ['tenant_energy_label']
 ALL_SUBSCRIPTION_EXPORT_DATA = SUBSCRIPTION_METRIC_EXPORT_TYPES + DATA_EXPORT_TYPES
 
 ALL_TENANT_EXPORT_TYPES = TENANT_METRIC_EXPORT_TYPES + DATA_EXPORT_TYPES
+
+SUBSCRIPTION_ID_LENGTH = 36
+
+ENERGY_LABEL_CALCULATION_CONFIG = [
+    {
+        'object_type': 'resource_group',
+        'energy_label_object': ResourceGroupEnergyLabel
+    },
+    {
+        'object_type': 'subscription',
+        'energy_label_object': SubscriptionEnergyLabel
+    }
+]

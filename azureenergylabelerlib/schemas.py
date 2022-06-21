@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # File: schemas.py
 #
-# Copyright 2021 Costas Tyfoxylos, Jenda Brands, Theodoor Scholte
+# Copyright 2022 Sayantan Khanra
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 #  of this software and associated documentation files (the "Software"), to

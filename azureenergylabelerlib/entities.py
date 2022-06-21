@@ -48,14 +48,13 @@ from .configuration import (TENANT_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             FINDINGS_QUERY_STRING,
-                            FILE_EXPORT_TYPES)
+                            FILE_EXPORT_TYPES,
+                            ENERGY_LABEL_CALCULATION_CONFIG)
 from .validations import validate_allowed_denied_subscription_ids, DestinationPath
 from .azureenergylabelerlibexceptions import (SubscriptionNotPartOfTenant,
                                               InvalidFrameworks,
                                               InvalidPath)
-from .labels import (ResourceGroupEnergyLabel,
-                     TenantEnergyLabel,
-                     SubscriptionEnergyLabel,
+from .labels import (TenantEnergyLabel,
                      AggregateSubscriptionEnergyLabel)
 
 __author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
@@ -76,7 +75,8 @@ LOGGER.addHandler(logging.NullHandler())
 class DefenderForCloud:
     """Models the Defender for Cloud and retrieves findings."""
 
-    frameworks = {'Azure Security Benchmark', 'SOC TSP', 'Azure CIS 1.1.0'}
+    frameworks = {'Azure Security Benchmark',
+                  'Azure CIS 1.1.0'}
 
     def __init__(self,
                  credential,
@@ -113,7 +113,7 @@ class DefenderForCloud:
             findings (list(Findings)): A list of findings matching the provided frameworks
 
         """
-        finding_details_list = []
+        finding_details_set = set()
         arg_client = arg.ResourceGraphClient(self._credential)
         arg_query_options = arg.models.QueryRequestOptions(result_format="objectArray")
         frameworks = DefenderForCloud.validate_frameworks(frameworks)
@@ -123,8 +123,8 @@ class DefenderForCloud:
                                                 options=arg_query_options)
             finding_data = arg_client.resources(arg_query).data
             for finding_details in finding_data:
-                finding_details_list.append(Finding(finding_details))
-        return finding_details_list
+                finding_details_set.add(Finding(finding_details))
+        return list(finding_details_set)
 
 
 class Tenant:  # pylint: disable=too-many-instance-attributes
@@ -156,12 +156,12 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
         self._targeted_subscriptions_energy_label = None
 
     @staticmethod
-    def _validate_tenant_subscription_ids(subscription_ids, tenant_account_ids):
-        """Validates that a provided list of valid Azure subscription ids are actually part of the landing zone.
+    def _validate_tenant_subscription_ids(subscription_ids, tenant_subscription_ids):
+        """Validates that a provided list of valid Azure subscription ids are actually part of the tenant.
 
         Args:
             subscription_ids: A list of valid Azure subscription ids.
-            tenant_account_ids: All the tenant subscription ids.
+            tenant_subscription_ids: All the tenant subscription ids.
 
         Returns:
             subscription_ids (list): A list of subscription ids that are part of the tenant.
@@ -170,7 +170,7 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
             SubscriptionNotPartOfTenant: If subscription ids are not part of the current tenant.
 
         """
-        subscriptions_not_in_tenant = set(subscription_ids) - set(tenant_account_ids)
+        subscriptions_not_in_tenant = set(subscription_ids) - set(tenant_subscription_ids)
         if subscriptions_not_in_tenant:
             raise SubscriptionNotPartOfTenant(f'The following subscription ids provided are not part of the tenant :'
                                               f' {subscriptions_not_in_tenant}')
@@ -260,7 +260,9 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
         """
         if self._targeted_subscriptions_energy_label is None:
             labeled_subscriptions = self.get_labeled_targeted_subscriptions(defender_for_cloud_findings)
-            label_counter = Counter([subscription.energy_label.label for subscription in labeled_subscriptions])
+            label_counter = Counter(
+                [subscription.get_energy_label(defender_for_cloud_findings).label for subscription in
+                 labeled_subscriptions])
             number_of_subscriptions = len(labeled_subscriptions)
             self._logger.debug(f'Number of subscriptions calculated are {number_of_subscriptions}')
             subscription_sums = []
@@ -314,8 +316,13 @@ class Subscription:
                  ):
         self._credential = credential
         self._data = data
-        self._subscription_thresholds = SUBSCRIPTION_THRESHOLDS
+        self._threshold = SUBSCRIPTION_THRESHOLDS
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
+
+    @property
+    def _type(self):
+        """Type of the azure resource."""
+        return 'subscription'
 
     @property
     def _id(self):
@@ -359,66 +366,33 @@ class Subscription:
         return [ExemptedPolicy(exempted_policy_detail) for exempted_policy_detail in
                 policy_client.policy_exemptions.list()]
 
-    def get_energy_label(self, findings):
-        """Calculates the energy label based on the subscription findings.
-
-        Args:
-            findings: Either a list of defender for cloud findings.
-
-        Returns:
-            The energy label of the subscription based on the provided configuration.
-
-        """
+    def get_open_findings(self, findings):
+        """Findings for the subscription."""
         if not issubclass(DataFrame, type(findings)):
             findings = pd.DataFrame([finding.measurement_data for finding in findings])
         df = findings  # pylint: disable=invalid-name
         try:
             open_findings = df[(df['Subscription ID'] == self.subscription_id)]
         except KeyError:
-            self._logger.info(f'No findings specific to the subscription {self.subscription_id}')
-            self.energy_label = ResourceGroupEnergyLabel('A', 0, 0, 0)  # pylint: disable=attribute-defined-outside-init
-            return self.energy_label
-        try:
-            number_of_high_findings = open_findings[open_findings['Severity'] == 'High'].shape[0]
-            number_of_medium_findings = open_findings[open_findings['Severity'] == 'Medium'].shape[0]
-            number_of_low_findings = open_findings[open_findings['Severity'] == 'Low'].shape[0]
-            open_findings_low_or_higher = open_findings[(open_findings['Severity'] == 'Low') |
-                                                        (open_findings['Severity'] == 'Medium') |
-                                                        (open_findings['Severity'] == 'High')]
-            max_days_open = max(open_findings_low_or_higher['Days Open']) \
-                if open_findings_low_or_higher['Days Open'].shape[0] > 0 else 0
+            self._logger.info(f'No findings for subscription {self.subscription_id}')
+            open_findings = pd.DataFrame([])
+        return open_findings
 
-            self._logger.debug(f'Calculating for subscription {self.subscription_id} '
-                               f'with number of high findings '
-                               f'{number_of_high_findings}, '
-                               f'number of medium findings {number_of_medium_findings}, '
-                               f'number of low findings {number_of_low_findings}, '
-                               f'and findings have been open for over '
-                               f'{max_days_open} days'
-                               )
-            for threshold in self._subscription_thresholds:
-                if all([number_of_high_findings <= threshold['high'],
-                        number_of_medium_findings <= threshold['medium'],
-                        number_of_low_findings <= threshold['low'],
-                        max_days_open < threshold['days_open_less_than']]):
-                    self.energy_label = SubscriptionEnergyLabel(threshold['label'],  # pylint: disable=attribute-defined-outside-init
-                                                                number_of_high_findings,
-                                                                number_of_medium_findings,
-                                                                number_of_low_findings,
-                                                                max_days_open)
-                    self._logger.debug(f'Energy Label for subscription {self.subscription_id} '
-                                       f'has been calculated: {self.energy_label.label}')
-                    break
-                self._logger.debug('No match with thresholds for energy label, using default worst one.')
-                self.energy_label = SubscriptionEnergyLabel('F',  # pylint: disable=attribute-defined-outside-init
-                                                            number_of_high_findings,
-                                                            number_of_medium_findings,
-                                                            number_of_low_findings,
-                                                            max_days_open)
-        except Exception:  # pylint: disable=broad-except
-            self._logger.exception(
-                f'Could not calculate energy label for subscription {self.subscription_id}, using the default "F"')
-        return self.energy_label
+    def get_energy_label(self, findings):
+        """Calculates the energy label for the resource group.
+
+        Args:
+            findings: Either a list of defender for cloud findings.
+
+        Returns:
+            The energy label of the resource group based on the provided configuration.
+
+        """
+        return EnergyLabeler(findings=self.get_open_findings(findings),
+                             threshold=self._threshold,
+                             object_type=self._type,
+                             name=self.subscription_id
+                             ).energy_label
 
 
 class ResourceGroup:
@@ -441,6 +415,23 @@ class ResourceGroup:
         """name."""
         return self._data.name
 
+    @property
+    def _type(self):
+        """Azure resource type."""
+        return 'resource_group'
+
+    def get_open_findings(self, findings):
+        """Findings for the resource group."""
+        if not issubclass(DataFrame, type(findings)):
+            findings = pd.DataFrame([finding.measurement_data for finding in findings])
+        df = findings  # pylint: disable=invalid-name
+        try:
+            open_findings = df[(df['Resource Group Name'] == self.name.lower())]
+        except KeyError:
+            self._logger.info(f'No findings for resource group {self.name}')
+            open_findings = pd.DataFrame([])
+        return open_findings
+
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
 
@@ -451,56 +442,11 @@ class ResourceGroup:
             The energy label of the resource group based on the provided configuration.
 
         """
-        if not issubclass(DataFrame, type(findings)):
-            findings = pd.DataFrame([finding.measurement_data for finding in findings])
-        df = findings  # pylint: disable=invalid-name
-        try:
-            open_findings = df[(df['Resource Group Name'] == self.name.lower())]
-        except KeyError:
-            self._logger.info(f'No findings for resource group {self.name}')
-            self.energy_label = ResourceGroupEnergyLabel('A', 0, 0, 0)  # pylint: disable=attribute-defined-outside-init
-            return self.energy_label
-        try:
-            number_of_high_findings = open_findings[open_findings['Severity'] == 'High'].shape[0]
-            number_of_medium_findings = open_findings[open_findings['Severity'] == 'Medium'].shape[0]
-            number_of_low_findings = open_findings[open_findings['Severity'] == 'Low'].shape[0]
-            open_findings_low_or_higher = open_findings[(open_findings['Severity'] == 'Low') |
-                                                        (open_findings['Severity'] == 'Medium') |
-                                                        (open_findings['Severity'] == 'High')]
-            max_days_open = max(open_findings_low_or_higher['Days Open']) \
-                if open_findings_low_or_higher['Days Open'].shape[0] > 0 else 0
-
-            LOGGER.debug(f'Calculating for resource group {self.name} '
-                         f'with number of high findings '
-                         f'{number_of_high_findings}, '
-                         f'number of medium findings {number_of_medium_findings}, '
-                         f'number of low findings {number_of_low_findings}, '
-                         f'and findings have been open for over '
-                         f'{max_days_open} days'
-                         )
-            for threshold in self._threshold:
-                if all([number_of_high_findings <= threshold['high'],
-                        number_of_medium_findings <= threshold['medium'],
-                        number_of_low_findings <= threshold['low'],
-                        max_days_open < threshold['days_open_less_than']]):
-                    self.energy_label = ResourceGroupEnergyLabel(threshold['label'],  # pylint: disable=attribute-defined-outside-init
-                                                                 number_of_high_findings,
-                                                                 number_of_medium_findings,
-                                                                 number_of_low_findings,
-                                                                 max_days_open)
-                    LOGGER.debug(f'Energy Label for resource group {self.name} '
-                                 f'has been calculated: {self.energy_label.label}')
-                    break
-                LOGGER.debug('No match with thresholds for energy label, using default worst one.')
-                self.energy_label = ResourceGroupEnergyLabel('F',  # pylint: disable=attribute-defined-outside-init
-                                                             number_of_high_findings,
-                                                             number_of_medium_findings,
-                                                             number_of_low_findings,
-                                                             max_days_open)
-        except Exception:  # pylint: disable=broad-except
-            self._logger.exception(
-                f'Could not calculate energy label for resource group {self.name}, using the default "F"')
-        return self.energy_label
+        return EnergyLabeler(findings=self.get_open_findings(findings),
+                             threshold=self._threshold,
+                             object_type=self._type,
+                             name=self.name
+                             ).energy_label
 
 
 class Finding:  # pylint: disable=too-many-public-methods
@@ -511,7 +457,9 @@ class Finding:  # pylint: disable=too-many-public-methods
                  ):
         self._data = data
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
-        print(self._data)
+
+    def __hash__(self):
+        return hash(self.recommendation_id)
 
     def __eq__(self, other):
         """Override the default equals behavior."""
@@ -647,6 +595,11 @@ class Finding:  # pylint: disable=too-many-public-methods
             return -1
 
     @property
+    def is_skipped(self):
+        """The finding is skipped or not."""
+        return self.compliance_state.lower() == 'skipped'
+
+    @property
     def measurement_data(self):
         """Measurement data for computing the energy label."""
         return {
@@ -769,11 +722,11 @@ class DataExporter:  # pylint: disable=too-few-public-methods
         self._logger.info(f'File {filename} copied to {directory}')
 
     def _export_to_blob(self, blob_url, filename, data):
-        """Exports as json to S3 object storage."""
-        _parsed_url = urlparse(blob_url)
-        blob_service_client = BlobServiceClient(account_url=f'{_parsed_url.scheme}://{_parsed_url.netloc}/',
+        """Exports as json to Blob container object storage."""
+        parsed_url = urlparse(blob_url)
+        blob_service_client = BlobServiceClient(account_url=f'{parsed_url.scheme}://{parsed_url.netloc}/',
                                                 credential=self._credentials)
-        container = _parsed_url.path.split('/')[1]
+        container = parsed_url.path.split('/')[1]
         blob_client = blob_service_client.get_blob_client(container=container, blob=filename)
         try:
             blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
@@ -804,3 +757,69 @@ class DataFileFactory:  # pylint: disable=too-few-public-methods
         arguments.update({key: value for key, value in copy(locals()).items()
                           if key in data_file_configuration.get('required_arguments')})
         return obj(**arguments)
+
+
+class EnergyLabeler:  # pylint: disable=too-few-public-methods
+    """Generic EnergyLabel factory to return energy label for resource groups and subscriptions."""
+
+    def __init__(self, object_type, name, findings, threshold):
+        self.findings = findings
+        self.threshold = threshold
+        self.name = name
+        self.object_type = object_type
+        self.energy_label_class = self._energy_label_class()
+        self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
+
+    def _energy_label_class(self):
+        config = next(
+            (config for config in ENERGY_LABEL_CALCULATION_CONFIG if config.get('object_type') == self.object_type),
+            None)
+        return config.get('energy_label_object', None)
+
+    @property
+    def energy_label(self):
+        """Energy Label for the subscription or resource group."""
+        if self.findings.empty:
+            return self.energy_label_class('A', 0, 0, 0)
+        try:
+            number_of_high_findings = self.findings[self.findings['Severity'] == 'High'].shape[0]
+            number_of_medium_findings = self.findings[self.findings['Severity'] == 'Medium'].shape[0]
+            number_of_low_findings = self.findings[self.findings['Severity'] == 'Low'].shape[0]
+            open_findings_low_or_higher = self.findings[(self.findings['Severity'] == 'Low') |
+                                                        (self.findings['Severity'] == 'Medium') |
+                                                        (self.findings['Severity'] == 'High')]
+            max_days_open = max(open_findings_low_or_higher['Days Open']) \
+                if open_findings_low_or_higher['Days Open'].shape[0] > 0 else 0
+
+            self._logger.debug(f'Calculating for {self.object_type} {self.name} '
+                               f'with number of high findings '
+                               f'{number_of_high_findings}, '
+                               f'number of medium findings {number_of_medium_findings}, '
+                               f'number of low findings {number_of_low_findings}, '
+                               f'and findings have been open for over '
+                               f'{max_days_open} days'
+                               )
+            for threshold in self.threshold:
+                if all([number_of_high_findings <= threshold['high'],
+                        number_of_medium_findings <= threshold['medium'],
+                        number_of_low_findings <= threshold['low'],
+                        max_days_open < threshold['days_open_less_than']]):
+                    energy_label = self.energy_label_class(threshold['label'],
+                                                           number_of_high_findings,
+                                                           number_of_medium_findings,
+                                                           number_of_low_findings,
+                                                           max_days_open)
+                    self._logger.debug(f'Energy Label for {self.object_type} {self.name} '
+                                       f'has been calculated: {energy_label.label}')
+                    break
+                self._logger.debug('No match with thresholds for energy label, using default worst one.')
+                energy_label = self.energy_label_class('F',
+                                                       number_of_high_findings,
+                                                       number_of_medium_findings,
+                                                       number_of_low_findings,
+                                                       max_days_open)
+        except Exception:  # pylint: disable=broad-except
+            self._logger.exception(
+                f'Could not calculate energy label for {self.object_type} {self.name}, using the default "F"')
+            energy_label = self.energy_label_class('F', 0, 0, 0)
+        return energy_label

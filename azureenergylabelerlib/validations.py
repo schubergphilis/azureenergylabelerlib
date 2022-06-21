@@ -36,6 +36,7 @@ from urllib.parse import urlparse
 from .azureenergylabelerlibexceptions import (InvalidSubscriptionListProvided,
                                               MutuallyExclusiveArguments,
                                               InvalidPath)
+from .configuration import SUBSCRIPTION_ID_LENGTH
 
 __author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
 __docformat__ = '''google'''
@@ -64,7 +65,7 @@ def is_valid_subscription_id(subscription_id):
     """
     if not isinstance(subscription_id, str):
         return False
-    return len(subscription_id) == 36
+    return len(subscription_id) == SUBSCRIPTION_ID_LENGTH
 
 
 def are_valid_subscription_ids(subscription_ids):
@@ -100,9 +101,8 @@ def validate_subscription_ids(subscription_ids):
     if not isinstance(subscription_ids, (list, tuple, set, str)):
         raise InvalidSubscriptionListProvided(f'Only list, tuple, set or string of subscriptions are accepted input, '
                                               f'received: {subscription_ids}')
-    if isinstance(subscription_ids, str):
-        if is_valid_subscription_id(subscription_ids):
-            subscription_ids = [subscription_ids]
+    if is_valid_subscription_id(subscription_ids):
+        subscription_ids = [subscription_ids]
     subscription_ids = sorted(list({subscription_id for subscription_id in subscription_ids if subscription_id}))
     if not are_valid_subscription_ids(subscription_ids):
         raise InvalidSubscriptionListProvided(f'The list provided contains invalid subscription ids: {subscription_ids}')
@@ -130,7 +130,7 @@ def validate_allowed_denied_subscription_ids(allowed_subscription_ids=None, deni
 
     """
     if all([allowed_subscription_ids, denied_subscription_ids]):
-        raise MutuallyExclusiveArguments('allow_list and deny_list are mutually exclusive.')
+        raise MutuallyExclusiveArguments('allowed_subscription_ids and denied_subscription_ids are mutually exclusive.')
     return validate_subscription_ids(allowed_subscription_ids), validate_subscription_ids(denied_subscription_ids)
 
 
