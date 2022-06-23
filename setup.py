@@ -32,7 +32,7 @@ setup(
     long_description=readme + '\n\n' + history,
     author='''Sayantan Khanra''',
     author_email='''skhanra@schubergphilis.com''',
-    url='''https://enx.gitlab.schubergphilis.com/python/azureenergylabelerlib''',
+    url='''https://github.com/schubergphilis/azureenergylabelerlib''',
     packages=find_packages(where='.', exclude=('tests', 'hooks', '_CI*')),
     package_dir={'''azureenergylabelerlib''':
                  '''azureenergylabelerlib'''},
