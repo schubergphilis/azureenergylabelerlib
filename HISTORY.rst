@@ -19,3 +19,9 @@ History
 ------------------
 
 * First Release
+
+
+0.2.1 (23-06-2022)
+------------------
+
+* Changed export all parameter
