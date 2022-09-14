@@ -31,9 +31,7 @@ Main code for azureenergylabelerlib.
 
 """
 
-from dataclasses import dataclass
 import logging
-import json
 from copy import copy
 from collections import Counter
 from urllib.parse import urlparse
