@@ -185,7 +185,7 @@ FILE_EXPORT_TYPES = [
      'object_type': LabeledSubscriptionsData,
      'required_arguments': ['labeled_subscriptions', 'defender_for_cloud_findings']},
     {'type': 'exempted_policies',
-     'filename': 'exemtped-policies.json',
+     'filename': 'exempted-policies.json',
      'object_type': SubscriptionExemptedPolicies,
      'required_arguments': ['labeled_subscriptions']},
     {'type': 'resource_group_energy_label',
