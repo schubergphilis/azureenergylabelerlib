@@ -365,7 +365,7 @@ class Subscription:
 
     def get_open_findings(self, findings):
         """Findings for the subscription."""
-        return [finding.measurement_data for finding in findings
+        return [finding for finding in findings
                 if finding.subscription_id == self.subscription_id]
 
     def get_energy_label(self, findings):
@@ -412,8 +412,8 @@ class ResourceGroup:
 
     def get_open_findings(self, findings):
         """Findings for the resource group."""
-        return [finding.measurement_data for finding in findings
-                if finding.resource_group == self.name.lower()]
+        return [finding for finding in findings
+                if finding.resource_group.lower() == self.name.lower()]
 
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
@@ -581,16 +581,6 @@ class Finding:  # pylint: disable=too-many-public-methods
     def is_skipped(self):
         """The finding is skipped or not."""
         return self.compliance_state.lower() == 'skipped'
-
-    @property
-    def measurement_data(self):
-        """Measurement data for computing the energy label."""
-        return {
-            'Subscription ID': self.subscription_id,
-            'Resource Group Name': self.resource_group,
-            'Severity': self.severity,
-            'Days Open': self.days_open
-        }
 
 
 class ExemptedPolicy:
@@ -767,8 +757,8 @@ class EnergyLabeler:  # pylint: disable=too-few-public-methods
         counted_findings = Counter()
         open_days_counter = Counter()
         for finding in self.findings:
-            counted_findings[finding['Severity']] += 1
-            open_days_counter[finding['Days Open']] += 1
+            counted_findings[finding.severity] += 1
+            open_days_counter[finding.days_open] += 1
         try:
             number_of_high_findings = counted_findings.get('High', 0)
             number_of_medium_findings = counted_findings.get('Medium', 0)
