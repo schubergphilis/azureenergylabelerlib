@@ -757,7 +757,6 @@ class EnergyLabeler:  # pylint: disable=too-few-public-methods
     @property
     def energy_label(self):
         """Energy Label for the subscription or resource group."""
-
         if not self.findings:
             return self.energy_label_class('A', 0, 0, 0, 0)
         counted_findings = Counter()
@@ -765,7 +764,6 @@ class EnergyLabeler:  # pylint: disable=too-few-public-methods
         for finding in self.findings:
             counted_findings[finding.severity] += 1
             open_days_counter[finding.days_open] += 1
-
         try:
             number_of_high_findings = counted_findings.get('High', 0)
             number_of_medium_findings = counted_findings.get('Medium', 0)
