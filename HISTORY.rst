@@ -25,3 +25,12 @@ History
 ------------------
 
 * Changed export all parameter
+
+
+1.0.0 (15-09-2022)
+------------------
+
+* - Removed pandas dependency in favor of native python functionality
+* - Added support for SAS URLs to export results to a Storage Account
+* - Fixed a bug where open days would show as 9999 for subscriptions scoring an A
+* - Fixed a typo on the exempted findings json file
