@@ -732,11 +732,13 @@ class DataExporter:  # pylint: disable=too-few-public-methods
                                                 credential=credential)
         container = parsed_url.path.split('/')[1]
         blob_client = blob_service_client.get_blob_client(container=container, blob=filename)
+
+        message = f'Export {filename} to blob {blob_url}'
         try:
             blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
-            self._logger.info(f'File {filename} copied to blob {parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}')
-        except Exception as error:  # pylint: disable=broad-except
-            self._logger.error(f'File {filename} copy to blob {parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path} failed: {error}')
+            self._logger.info(f'{message} success')
+        except Exception:  # pylint: disable=broad-except
+            self._logger.exception(f'{message} failure')
 
 
 class DataFileFactory:  # pylint: disable=too-few-public-methods
