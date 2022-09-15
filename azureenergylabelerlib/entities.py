@@ -38,8 +38,6 @@ from urllib.parse import urlparse
 from pathlib import Path
 from datetime import datetime
 from cachetools import cached, TTLCache
-from pandas.core.frame import DataFrame
-import pandas as pd
 from azure.mgmt.resource import SubscriptionClient, ResourceManagementClient
 from azure.storage.blob import BlobServiceClient
 from azure.mgmt.resource.policy import PolicyClient
@@ -241,10 +239,9 @@ class Tenant:  # pylint: disable=too-many-instance-attributes
         """
         labeled_subscriptions = []
         self._logger.debug('Calculating on defender for cloud findings')
-        dataframe_measurements = pd.DataFrame([finding.measurement_data for finding in defender_for_cloud_findings])
         for subscription in self.subscriptions_to_be_labeled:
             self._logger.debug(f'Calculating energy label for subscription {subscription.subscription_id}')
-            subscription.get_energy_label(dataframe_measurements)
+            subscription.get_energy_label(defender_for_cloud_findings)
             labeled_subscriptions.append(subscription)
         return labeled_subscriptions
 
@@ -368,15 +365,8 @@ class Subscription:
 
     def get_open_findings(self, findings):
         """Findings for the subscription."""
-        if not issubclass(DataFrame, type(findings)):
-            findings = pd.DataFrame([finding.measurement_data for finding in findings])
-        df = findings  # pylint: disable=invalid-name
-        try:
-            open_findings = df[(df['Subscription ID'] == self.subscription_id)]
-        except KeyError:
-            self._logger.info(f'No findings for subscription {self.subscription_id}')
-            open_findings = pd.DataFrame([])
-        return open_findings
+        return [finding for finding in findings
+                if finding.subscription_id == self.subscription_id]
 
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
@@ -422,15 +412,8 @@ class ResourceGroup:
 
     def get_open_findings(self, findings):
         """Findings for the resource group."""
-        if not issubclass(DataFrame, type(findings)):
-            findings = pd.DataFrame([finding.measurement_data for finding in findings])
-        df = findings  # pylint: disable=invalid-name
-        try:
-            open_findings = df[(df['Resource Group Name'] == self.name.lower())]
-        except KeyError:
-            self._logger.info(f'No findings for resource group {self.name}')
-            open_findings = pd.DataFrame([])
-        return open_findings
+        return [finding for finding in findings
+                if finding.resource_group.lower() == self.name.lower()]
 
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
@@ -598,16 +581,6 @@ class Finding:  # pylint: disable=too-many-public-methods
     def is_skipped(self):
         """The finding is skipped or not."""
         return self.compliance_state.lower() == 'skipped'
-
-    @property
-    def measurement_data(self):
-        """Measurement data for computing the energy label."""
-        return {
-            'Subscription ID': self.subscription_id,
-            'Resource Group Name': self.resource_group,
-            'Severity': self.severity,
-            'Days Open': self.days_open
-        }
 
 
 class ExemptedPolicy:
@@ -784,17 +757,20 @@ class EnergyLabeler:  # pylint: disable=too-few-public-methods
     @property
     def energy_label(self):
         """Energy Label for the subscription or resource group."""
-        if self.findings.empty:
+
+        if not self.findings:
             return self.energy_label_class('A', 0, 0, 0, 0)
+        counted_findings = Counter()
+        open_days_counter = Counter()
+        for finding in self.findings:
+            counted_findings[finding.severity] += 1
+            open_days_counter[finding.days_open] += 1
+
         try:
-            number_of_high_findings = self.findings[self.findings['Severity'] == 'High'].shape[0]
-            number_of_medium_findings = self.findings[self.findings['Severity'] == 'Medium'].shape[0]
-            number_of_low_findings = self.findings[self.findings['Severity'] == 'Low'].shape[0]
-            open_findings_low_or_higher = self.findings[(self.findings['Severity'] == 'Low') |
-                                                        (self.findings['Severity'] == 'Medium') |
-                                                        (self.findings['Severity'] == 'High')]
-            max_days_open = max(open_findings_low_or_higher['Days Open']) \
-                if open_findings_low_or_higher['Days Open'].shape[0] > 0 else 0
+            number_of_high_findings = counted_findings.get('High', 0)
+            number_of_medium_findings = counted_findings.get('Medium', 0)
+            number_of_low_findings = counted_findings.get('Low', 0)
+            max_days_open = max(open_days_counter)
 
             self._logger.debug(f'Calculating for {self.object_type} {self.name} '
                                f'with number of high findings '
