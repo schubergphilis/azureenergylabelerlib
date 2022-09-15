@@ -697,16 +697,21 @@ class DataExporter:  # pylint: disable=too-few-public-methods
     def _export_to_blob(self, blob_url, filename, data):
         """Exports as json to Blob container object storage."""
         parsed_url = urlparse(blob_url)
-        blob_service_client = BlobServiceClient(account_url=f'{parsed_url.scheme}://{parsed_url.netloc}/',
-                                                credential=self._credentials)
+
+        account_url = blob_url if parsed_url.query else f'{parsed_url.scheme}://{parsed_url.netloc}/'
+        # If SAS Token is included in the URL, ommit credential parameter
+        credential = None if parsed_url.query else self._credentials
+        blob_service_client = BlobServiceClient(account_url=account_url,
+                                                credential=credential)
         container = parsed_url.path.split('/')[1]
         blob_client = blob_service_client.get_blob_client(container=container, blob=filename)
+
+        message = f'Export {filename} to blob {blob_url}'
         try:
             blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
-            self._logger.info(f'File {filename} copied to blob {blob_url}')
-        except Exception as error:  # pylint: disable=broad-except
-            self._logger.error(error)
-            self._logger.info(f'File {filename} copy to blob {blob_url} failed')
+            self._logger.info(f'{message} success')
+        except Exception:  # pylint: disable=broad-except
+            self._logger.exception(f'{message} failure')
 
 
 class DataFileFactory:  # pylint: disable=too-few-public-methods
