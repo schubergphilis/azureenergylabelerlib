@@ -724,17 +724,19 @@ class DataExporter:  # pylint: disable=too-few-public-methods
     def _export_to_blob(self, blob_url, filename, data):
         """Exports as json to Blob container object storage."""
         parsed_url = urlparse(blob_url)
-        # This enables uploads using URLs that include a SAS token, which is the safest
-        blob_service_client = BlobServiceClient(account_url=blob_url) if parsed_url.query else BlobServiceClient(account_url=f'{parsed_url.scheme}://{parsed_url.netloc}/',
-                                                credential=self._credentials)
+
+        account_url = blob_url if parsed_url.query else f'{parsed_url.scheme}://{parsed_url.netloc}/'
+        # If SAS Token is included in the URL, ommit credential parameter
+        credential = None if parsed_url.query else self._credentials
+        blob_service_client = BlobServiceClient(account_url=account_url,
+                                                credential=credential)
         container = parsed_url.path.split('/')[1]
         blob_client = blob_service_client.get_blob_client(container=container, blob=filename)
         try:
             blob_client.upload_blob(data.encode('utf-8'), overwrite=True)
             self._logger.info(f'File {filename} copied to blob {parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}')
         except Exception as error:  # pylint: disable=broad-except
-            self._logger.error(error)
-            self._logger.info(f'File {filename} copy to blob {parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path} failed')
+            self._logger.error(f'File {filename} copy to blob {parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path} failed: {error}')
 
 
 class DataFileFactory:  # pylint: disable=too-few-public-methods
