@@ -171,7 +171,7 @@ FILE_EXPORT_TYPES = [
     {'type': 'tenant_energy_label',
      'filename': 'tenant-energy-label.json',
      'object_type': TenantEnergyLabelingData,
-     'required_arguments': ['id', 'energy_label']},
+     'required_arguments': ['id', 'energy_label', 'labeled_subscriptions', 'defender_for_cloud_findings']},
     {'type': 'findings',
      'filename': 'defender-for-cloud-findings.json',
      'object_type': DefenderForCloudFindingsData,
