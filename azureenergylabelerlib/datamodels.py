@@ -56,17 +56,37 @@ class TenantEnergyLabelingData:  # pylint: disable=too-few-public-methods
     def __init__(self,
                  filename,
                  id,  # pylint: disable= redefined-builtin
-                 energy_label):
+                 energy_label,
+                 labeled_subscriptions,
+                 defender_for_cloud_findings):
         self.filename = filename
         self._id = id
         self._energy_label = energy_label
+        self._labeled_subscriptions = labeled_subscriptions
+        self._defender_for_cloud_findings = defender_for_cloud_findings
 
     @property
     def json(self):
         """Data to json."""
-        return json.dumps([{'Tenant ID': self._id,
-                            'Tenant Energy Label': self._energy_label}],
-                          indent=2, default=str)
+        subscription_metrics = []
+        for subscription in self._labeled_subscriptions:
+            energy_label = subscription.get_energy_label(self._defender_for_cloud_findings)
+            subscription_metrics.append({
+                'Subscription ID': subscription.subscription_id,
+                'Subscription Display Name': subscription.display_name,
+                'Number of high findings': energy_label.number_of_high_findings,
+                'Number of medium findings': energy_label.number_of_medium_findings,
+                'Number of low findings': energy_label.number_of_low_findings,
+                'Number of exempted findings': len(subscription.exempted_policies),
+                'Number of maximum days open': energy_label.max_days_open,
+                'Energy Label': energy_label.label
+            })
+        return json.dumps(
+            [{
+                'Tenant ID': self._id,
+                'Tenant Energy Label': self._energy_label,
+                'Labeled subscriptions': subscription_metrics
+            }], indent=2, default=str)
 
 
 class DefenderForCloudFindingsData:  # pylint: disable=too-few-public-methods
@@ -151,6 +171,7 @@ class LabeledSubscriptionData:
                 'Number of high findings': energy_label.number_of_high_findings,
                 'Number of medium findings': energy_label.number_of_medium_findings,
                 'Number of low findings': energy_label.number_of_low_findings,
+                'Number of exempted findings': len(self._labeled_subscription.exempted_policies),
                 'Number of maximum days open': energy_label.max_days_open,
                 'Energy Label': energy_label.label}
 
@@ -179,6 +200,7 @@ class LabeledResourceGroupData:
                     energy_label.number_of_high_findings,
                 'Number of medium findings': energy_label.number_of_medium_findings,
                 'Number of low findings': energy_label.number_of_low_findings,
+                'Number of exempted findings': len(self._labeled_resource_group.exempted_policies),
                 'Number of maximum days open': energy_label.max_days_open,
                 'Energy Label': energy_label.label}
 
@@ -224,4 +246,4 @@ class LabeledSubscriptionsData:  # pylint: disable=too-few-public-methods
     def json(self):
         """Data to json."""
         return json.dumps([LabeledSubscriptionData(self.filename, subscription, self.defender_for_cloud_findings).data
-                           for subscription in self._labeled_subscriptions], indent=2, default=str)
+                           for subscription in self._labeled_subscriptions], indent=2, default=str) 
