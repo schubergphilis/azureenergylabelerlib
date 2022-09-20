@@ -53,7 +53,7 @@ LOGGER.addHandler(logging.NullHandler())
 class TenantEnergyLabelingData:  # pylint: disable=too-few-public-methods
     """Models the data for energy labeling to export."""
 
-    def __init__(self,
+    def __init__(self,  # pylint: disable= too-many-arguments
                  filename,
                  id,  # pylint: disable= redefined-builtin
                  energy_label,
@@ -246,4 +246,4 @@ class LabeledSubscriptionsData:  # pylint: disable=too-few-public-methods
     def json(self):
         """Data to json."""
         return json.dumps([LabeledSubscriptionData(self.filename, subscription, self.defender_for_cloud_findings).data
-                           for subscription in self._labeled_subscriptions], indent=2, default=str) 
+                           for subscription in self._labeled_subscriptions], indent=2, default=str)
