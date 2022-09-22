@@ -34,3 +34,9 @@ History
 * - Added support for SAS URLs to export results to a Storage Account
 * - Fixed a bug where open days would show as 9999 for subscriptions scoring an A
 * - Fixed a typo on the exempted findings json file
+
+
+1.0.1 (22-09-2022)
+------------------
+
+* Fixed a bug where Resource Groups lack the exempted_findings property
