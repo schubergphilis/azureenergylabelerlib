@@ -36,7 +36,13 @@ History
 * - Fixed a typo on the exempted findings json file
 
 
-1.0.1 (22-09-2022)
+1.1.0 (21-09-2022)
+------------------
+
+* Added more information to the --export-metrics option output
+
+
+1.1.1 (22-09-2022)
 ------------------
 
 * Fixed a bug where Resource Groups lack the exempted_findings property
