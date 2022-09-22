@@ -200,7 +200,6 @@ class LabeledResourceGroupData:
                     energy_label.number_of_high_findings,
                 'Number of medium findings': energy_label.number_of_medium_findings,
                 'Number of low findings': energy_label.number_of_low_findings,
-                'Number of exempted findings': len(self._labeled_resource_group.exempted_policies),
                 'Number of maximum days open': energy_label.max_days_open,
                 'Energy Label': energy_label.label}
 
