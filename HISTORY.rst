@@ -46,3 +46,9 @@ History
 ------------------
 
 * Fixed a bug where Resource Groups lack the exempted_findings property
+
+
+2.0.0 (04-10-2022)
+------------------
+
+* Removed ExemptedPolicy class
