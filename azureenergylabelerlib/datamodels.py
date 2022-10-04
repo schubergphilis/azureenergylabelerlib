@@ -136,13 +136,13 @@ class SubscriptionExemptedPolicies:
         for subscription in self._labeled_subscriptions:
             for exempted_policy in subscription.exempted_policies:
                 exempted_policies.append({'Subscription ID': subscription.subscription_id,
-                                          'Created At': exempted_policy.created_at,
-                                          'Created By': exempted_policy.created_by,
+                                          'Created At': exempted_policy.system_data.created_at,
+                                          'Created By': exempted_policy.system_data.created_by,
                                           'Description': exempted_policy.description,
                                           'Display Name': exempted_policy.display_name,
                                           'Exemption Category': exempted_policy.exemption_category,
-                                          'Last Modified By': exempted_policy.last_modified_by,
-                                          'Last Modified At': exempted_policy.last_modified_at,
+                                          'Last Modified By': exempted_policy.system_data.last_modified_by,
+                                          'Last Modified At': exempted_policy.system_data.last_modified_at,
                                           'Name': exempted_policy.name,
                                           'Expires On': exempted_policy.expires_on
                                           })

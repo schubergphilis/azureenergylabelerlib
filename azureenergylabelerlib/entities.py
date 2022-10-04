@@ -360,8 +360,7 @@ class Subscription:
     def exempted_policies(self):
         """Policies exempted for this subscription."""
         policy_client = PolicyClient(credential=self._credential, subscription_id=self.subscription_id)
-        return [ExemptedPolicy(exempted_policy_detail) for exempted_policy_detail in
-                policy_client.policy_exemptions.list()]
+        return list(policy_client.policy_exemptions.list())
 
     def get_open_findings(self, findings):
         """Findings for the subscription."""
@@ -581,71 +580,6 @@ class Finding:  # pylint: disable=too-many-public-methods
     def is_skipped(self):
         """The finding is skipped or not."""
         return self.compliance_state.lower() == 'skipped'
-
-
-class ExemptedPolicy:
-    """Defines an Exempted Defender For Cloud Policy data."""
-
-    def __init__(self,
-                 data
-                 ):
-        self._data = data
-        self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
-
-    @property
-    def created_by(self):
-        """Created by which user."""
-        return self._data.system_data.created_by
-
-    @property
-    def created_at(self):
-        """At what time the exemption was created."""
-        return self._data.system_data.created_at
-
-    @property
-    def last_modified_by(self):
-        """Last modified by which user."""
-        return self._data.system_data.last_modified_by
-
-    @property
-    def last_modified_at(self):
-        """Last modified at."""
-        return self._data.system_data.last_modified_at
-
-    @property
-    def id(self):  # pylint: disable=invalid-name
-        """Id."""
-        return self._data.id
-
-    @property
-    def name(self):
-        """Name."""
-        return self._data.name
-
-    @property
-    def type(self):
-        """Type of the resource."""
-        return self._data.type
-
-    @property
-    def exemption_category(self):
-        """Exemption category."""
-        return self._data.exemption_category
-
-    @property
-    def expires_on(self):
-        """Exemption expires on."""
-        return self._data.expires_on
-
-    @property
-    def display_name(self):
-        """Display Name of the policy/recommendation."""
-        return self._data.display_name.split('ASC-')[1]
-
-    @property
-    def description(self):
-        """Description."""
-        return self._data.description
 
 
 class DataExporter:  # pylint: disable=too-few-public-methods
