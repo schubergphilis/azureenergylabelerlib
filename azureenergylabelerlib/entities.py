@@ -73,7 +73,7 @@ LOGGER.addHandler(logging.NullHandler())
 class DefenderForCloud:
     """Models the Defender for Cloud and retrieves findings."""
 
-    frameworks = {'Azure Security Benchmark',
+    frameworks = {'Microsoft cloud security benchmark',
                   'Azure CIS 1.1.0'}
 
     def __init__(self,

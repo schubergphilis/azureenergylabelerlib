@@ -93,7 +93,7 @@ FINDINGS_QUERY_STRING = "    securityresources\
     | join kind = leftouter (securityresources\
     | where type == \"microsoft.security/regulatorycompliancestandards/regulatorycompliancecontrols\"\
     | extend complianceStandardId = replace( \"-\", \" \", extract(@'/regulatoryComplianceStandards/([^/]*)', 1, id))\
-    | where complianceStandardId == \"Azure Security Benchmark\"\
+    | where complianceStandardId == \"Microsoft cloud security benchmark\"\
     | extend  controlName = tostring(properties.description)\
     | project controlId = name, controlName\
     | distinct  *) on $right.controlId == $left.complianceControlId\
@@ -164,7 +164,7 @@ RESOURCE_GROUP_THRESHOLDS = [{'label': 'A',
                               'low': 100,
                               'days_open_less_than': 999}]
 
-DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Azure Security Benchmark',
+DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS = {'Microsoft cloud security benchmark',
                                          'Azure CIS 1.1.0'}
 
 FILE_EXPORT_TYPES = [
