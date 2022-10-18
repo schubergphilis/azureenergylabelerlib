@@ -52,3 +52,9 @@ History
 ------------------
 
 * Removed ExemptedPolicy class
+
+
+3.0.0 (18-10-2022)
+------------------
+
+* Microsoft renamed "Azure Security Benchmark" to "Microsoft cloud security benchmark", changing the interface
