@@ -62,3 +62,7 @@ env
 
 # Visual studio code
 .vscode
+
+
+# cruft configuration
+.cruft.json
