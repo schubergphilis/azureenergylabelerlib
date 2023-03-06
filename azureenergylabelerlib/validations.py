@@ -80,7 +80,7 @@ def are_valid_subscription_ids(subscription_ids):
     """
     if not isinstance(subscription_ids, (list, tuple, set)):
         return False
-    return all([is_valid_subscription_id(subscription) for subscription in subscription_ids])
+    return all(is_valid_subscription_id(subscription) for subscription in subscription_ids)
 
 
 def validate_subscription_ids(subscription_ids):
@@ -105,7 +105,8 @@ def validate_subscription_ids(subscription_ids):
         subscription_ids = [subscription_ids]
     subscription_ids = sorted(list({subscription_id for subscription_id in subscription_ids if subscription_id}))
     if not are_valid_subscription_ids(subscription_ids):
-        raise InvalidSubscriptionListProvided(f'The list provided contains invalid subscription ids: {subscription_ids}')
+        raise InvalidSubscriptionListProvided(
+            f'The list provided contains invalid subscription ids: {subscription_ids}')
     return subscription_ids
 
 

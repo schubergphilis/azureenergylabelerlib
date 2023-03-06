@@ -63,7 +63,7 @@ LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
 
 
-class AzureEnergyLabeler:  # pylint: disable=too-many-arguments,  too-many-instance-attributes
+class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
     """Labeling subscriptions based on findings and label configurations.
 
     Parameters
