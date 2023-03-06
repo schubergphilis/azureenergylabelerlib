@@ -21,7 +21,7 @@ Using of pipenv is highly recommended.
 
 1. Clone your fork locally::
 
-    $ git clone https://enx.gitlab.schubergphilis.com/python/azureenergylabelerlib
+    $ git clone https://github.com/schubergphilis/azureenergylabelerlib
 
 2. Install your local copy into a virtualenv. Assuming you have pipenv installed, this is how you set up your clone for local development::
 

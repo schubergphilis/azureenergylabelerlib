@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File: azureenergylabelerlib.py
+# File: entities.py
 #
 # Copyright 2022 Sayantan Khanra
 #
@@ -24,10 +24,10 @@
 #
 
 """
-Main code for azureenergylabelerlib.
+Main code for entities.
 
 .. _Google Python Style Guide:
-   http://google.github.io/styleguide/pyguide.html
+   https://google.github.io/styleguide/pyguide.html
 
 """
 

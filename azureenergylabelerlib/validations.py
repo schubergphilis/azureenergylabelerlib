@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File: azureenergylabelerlib.py
+# File: validations.py
 #
 # Copyright 2022 Sayantan Khanra
 #
@@ -24,10 +24,10 @@
 #
 
 """
-Main code for azureenergylabelerlib.
+Main code for validations.
 
 .. _Google Python Style Guide:
-   http://google.github.io/styleguide/pyguide.html
+   https://google.github.io/styleguide/pyguide.html
 
 """
 
@@ -48,7 +48,7 @@ __maintainer__ = '''Sayantan Khanra'''
 __email__ = '''<skhanra@schubergphilis.com>'''
 __status__ = '''Development'''  # "Prototype", "Development", "Production".
 
-LOGGER_BASENAME = '''entities'''
+LOGGER_BASENAME = '''validations'''
 LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
 

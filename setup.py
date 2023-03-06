@@ -28,7 +28,7 @@ version = open('.VERSION').read()
 setup(
     name='''azureenergylabelerlib''',
     version=version,
-    description='''A python library that generates energy labels based on findings in Azure subscriptions ''',
+    description='''A python library that generates energy labels based on findings in Azure subscriptions''',
     long_description=readme + '\n\n' + history,
     author='''Sayantan Khanra''',
     author_email='''skhanra@schubergphilis.com''',
