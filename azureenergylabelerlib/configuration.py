@@ -28,7 +28,7 @@ configuration package.
 
 Import all parts from configuration here
 .. _Google Python Style Guide:
-   http://google.github.io/styleguide/pyguide.html
+   https://google.github.io/styleguide/pyguide.html
 """
 import logging
 

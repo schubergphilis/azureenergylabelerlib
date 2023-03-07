@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File: azureenergylabelerlib.py
+# File: validations.py
 #
 # Copyright 2022 Sayantan Khanra
 #
@@ -24,10 +24,10 @@
 #
 
 """
-Main code for azureenergylabelerlib.
+Main code for validations.
 
 .. _Google Python Style Guide:
-   http://google.github.io/styleguide/pyguide.html
+   https://google.github.io/styleguide/pyguide.html
 
 """
 
@@ -48,7 +48,7 @@ __maintainer__ = '''Sayantan Khanra'''
 __email__ = '''<skhanra@schubergphilis.com>'''
 __status__ = '''Development'''  # "Prototype", "Development", "Production".
 
-LOGGER_BASENAME = '''entities'''
+LOGGER_BASENAME = '''validations'''
 LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
 
@@ -80,7 +80,7 @@ def are_valid_subscription_ids(subscription_ids):
     """
     if not isinstance(subscription_ids, (list, tuple, set)):
         return False
-    return all([is_valid_subscription_id(subscription) for subscription in subscription_ids])
+    return all(is_valid_subscription_id(subscription) for subscription in subscription_ids)
 
 
 def validate_subscription_ids(subscription_ids):
@@ -105,7 +105,8 @@ def validate_subscription_ids(subscription_ids):
         subscription_ids = [subscription_ids]
     subscription_ids = sorted(list({subscription_id for subscription_id in subscription_ids if subscription_id}))
     if not are_valid_subscription_ids(subscription_ids):
-        raise InvalidSubscriptionListProvided(f'The list provided contains invalid subscription ids: {subscription_ids}')
+        raise InvalidSubscriptionListProvided(
+            f'The list provided contains invalid subscription ids: {subscription_ids}')
     return subscription_ids
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File: azureenergylabelerlib.py
+# File: datamodels.py
 #
 # Copyright 2022 Sayantan Khanra
 #
@@ -24,10 +24,10 @@
 #
 
 """
-Main code for azureenergylabelerlib.
+Main code for datamodels.
 
 .. _Google Python Style Guide:
-   http://google.github.io/styleguide/pyguide.html
+   https://google.github.io/styleguide/pyguide.html
 
 """
 
@@ -50,7 +50,7 @@ LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
 
 
-class TenantEnergyLabelingData:  # pylint: disable=too-few-public-methods
+class TenantEnergyLabelingData:
     """Models the data for energy labeling to export."""
 
     def __init__(self,  # pylint: disable= too-many-arguments
@@ -89,7 +89,7 @@ class TenantEnergyLabelingData:  # pylint: disable=too-few-public-methods
             }], indent=2, default=str)
 
 
-class DefenderForCloudFindingsData:  # pylint: disable=too-few-public-methods
+class DefenderForCloudFindingsData:
     """Models the data for energy labeling to export."""
 
     def __init__(self, filename, defender_for_cloud_findings):
@@ -209,7 +209,7 @@ class LabeledResourceGroupData:
         return json.dumps(self.data, indent=2, default=str)
 
 
-class LabeledResourceGroupsData:  # pylint: disable=too-few-public-methods
+class LabeledResourceGroupsData:
     """Models the data for energy labeling to export."""
 
     def __init__(self, filename, labeled_subscriptions, defender_for_cloud_findings):
@@ -233,7 +233,7 @@ class LabeledResourceGroupsData:  # pylint: disable=too-few-public-methods
                            for resource_group in labeled_resource_groups], indent=2, default=str)
 
 
-class LabeledSubscriptionsData:  # pylint: disable=too-few-public-methods
+class LabeledSubscriptionsData:
     """Models the data for energy labeling to export."""
 
     def __init__(self, filename, labeled_subscriptions, defender_for_cloud_findings):

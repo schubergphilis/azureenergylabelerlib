@@ -2,7 +2,7 @@
 azureenergylabelerlib
 =====================
 
-A python library that generates energy labeles based on findings in Azure subscriptions 
+A python library that generates energy labels based on findings in Azure subscriptions
 
 
 * Documentation: https://azureenergylabelerlib.readthedocs.org/en/latest

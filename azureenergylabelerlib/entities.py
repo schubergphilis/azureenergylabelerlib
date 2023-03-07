@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# File: azureenergylabelerlib.py
+# File: entities.py
 #
 # Copyright 2022 Sayantan Khanra
 #
@@ -24,10 +24,10 @@
 #
 
 """
-Main code for azureenergylabelerlib.
+Main code for entities.
 
 .. _Google Python Style Guide:
-   http://google.github.io/styleguide/pyguide.html
+   https://google.github.io/styleguide/pyguide.html
 
 """
 
@@ -125,7 +125,7 @@ class DefenderForCloud:
         return list(finding_details_set)
 
 
-class Tenant:  # pylint: disable=too-many-instance-attributes
+class Tenant:
     """Models the Azure tenant and retrieves subscrptions from it."""
 
     # pylint: disable=too-many-arguments,dangerous-default-value
@@ -431,7 +431,7 @@ class ResourceGroup:
                              ).energy_label
 
 
-class Finding:  # pylint: disable=too-many-public-methods
+class Finding:
     """Models a finding."""
 
     def __init__(self,
@@ -582,7 +582,7 @@ class Finding:  # pylint: disable=too-many-public-methods
         return self.compliance_state.lower() == 'skipped'
 
 
-class DataExporter:  # pylint: disable=too-few-public-methods
+class DataExporter:
     """Export Azure security data."""
 
     #  pylint: disable=too-many-arguments
@@ -624,7 +624,7 @@ class DataExporter:  # pylint: disable=too-few-public-methods
             path.mkdir()
         except FileExistsError:
             self._logger.debug(f'Directory {directory} already exists.')
-        with open(path.joinpath(filename), 'w') as jsonfile:
+        with open(path.joinpath(filename), 'w', encoding='utf-8') as jsonfile:
             jsonfile.write(data)
         self._logger.info(f'File {filename} copied to {directory}')
 
@@ -648,7 +648,7 @@ class DataExporter:  # pylint: disable=too-few-public-methods
             self._logger.exception(f'{message} failure')
 
 
-class DataFileFactory:  # pylint: disable=too-few-public-methods
+class DataFileFactory:
     """Data export factory to handle the different data types returned."""
 
     #  pylint: disable=too-many-arguments, unused-argument
@@ -671,7 +671,7 @@ class DataFileFactory:  # pylint: disable=too-few-public-methods
         return obj(**arguments)
 
 
-class EnergyLabeler:  # pylint: disable=too-few-public-methods
+class EnergyLabeler:
     """Generic EnergyLabel factory to return energy label for resource groups and subscriptions."""
 
     def __init__(self, object_type, name, findings, threshold):
