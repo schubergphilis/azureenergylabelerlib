@@ -64,3 +64,9 @@ History
 ------------------
 
 * Bump dependencies.
+
+
+3.1.1 (21-03-2023)
+------------------
+
+* Check subscription tenant id on Tenant init
