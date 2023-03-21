@@ -185,7 +185,7 @@ class Tenant:
         """
         subscription_client = SubscriptionClient(self.credential)
         return [Subscription(self.credential, subscription_detail) for subscription_detail in
-                subscription_client.subscriptions.list()]
+                subscription_client.subscriptions.list() if subscription_detail.tenant_id == self.tenant_id]
 
     def get_allowed_subscriptions(self):
         """Retrieves allowed subscriptions based on an allow list.
