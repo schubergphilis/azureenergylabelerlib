@@ -121,6 +121,7 @@ class DefenderForCloud:
                                                 options=arg_query_options)
             finding_data = arg_client.resources(arg_query).data
             for finding_details in finding_data:
+                finding = Finding(finding_details)
                 finding_details_set.add(Finding(finding_details))
         return list(finding_details_set)
 
@@ -185,7 +186,7 @@ class Tenant:
         """
         subscription_client = SubscriptionClient(self.credential)
         return [Subscription(self.credential, subscription_detail) for subscription_detail in
-                subscription_client.subscriptions.list()]
+                subscription_client.subscriptions.list() if subscription_detail.tenant_id == self.tenant_id]
 
     def get_allowed_subscriptions(self):
         """Retrieves allowed subscriptions based on an allow list.
