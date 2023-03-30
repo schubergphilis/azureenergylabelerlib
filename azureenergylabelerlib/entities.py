@@ -367,6 +367,11 @@ class Subscription:
         return [finding for finding in findings
                 if finding.subscription_id == self.subscription_id]
 
+    def get_not_skipped_findings(self, findings):
+        """Not skipped findings for the subscription."""
+        return [finding for finding in findings
+                if not finding.is_skipped]
+
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
 
@@ -377,7 +382,7 @@ class Subscription:
             The energy label of the resource group based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=self.get_open_findings(findings),
+        return EnergyLabeler(findings=self.get_not_skipped_findings(self.get_open_findings(findings)),
                              threshold=self._threshold,
                              object_type=self._type,
                              name=self.subscription_id
@@ -414,6 +419,11 @@ class ResourceGroup:
         return [finding for finding in findings
                 if finding.resource_group.lower() == self.name.lower()]
 
+    def get_not_skipped_findings(self, findings):
+        """Not skipped findings for the resource group."""
+        return [finding for finding in findings
+                if not finding.is_skipped]
+
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
 
@@ -424,7 +434,7 @@ class ResourceGroup:
             The energy label of the resource group based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=self.get_open_findings(findings),
+        return EnergyLabeler(findings=self.get_not_skipped_findings(self.get_open_findings(findings)),
                              threshold=self._threshold,
                              object_type=self._type,
                              name=self.name
