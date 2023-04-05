@@ -373,9 +373,9 @@ class Subscription:
                 if not finding.is_skipped]
 
     def exclude_findings_by_state(self, findings, states):
-        """Returns findings excluding those with specific states"""
+        """Returns findings excluding those with specific states."""
         return [finding for finding in findings
-                if not finding.state in states]
+                if finding.state not in states]
 
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
@@ -430,9 +430,9 @@ class ResourceGroup:
                 if not finding.is_skipped]
 
     def exclude_findings_by_state(self, findings, states):
-        """Returns findings excluding those with specific states"""
+        """Returns findings excluding those with specific states."""
         return [finding for finding in findings
-                if not finding.state in states]
+                if finding.state not in states]
 
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
