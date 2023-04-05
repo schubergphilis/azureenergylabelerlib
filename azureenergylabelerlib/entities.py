@@ -372,6 +372,11 @@ class Subscription:
         return [finding for finding in findings
                 if not finding.is_skipped]
 
+    def exclude_findings_by_state(self, findings, states):
+        """Returns findings excluding those with specific states"""
+        return [finding for finding in findings
+                if not finding.state in states]
+
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
 
@@ -382,7 +387,7 @@ class Subscription:
             The energy label of the resource group based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=self.get_not_skipped_findings(self.get_open_findings(findings)),
+        return EnergyLabeler(findings=self.exclude_findings_by_state(self.get_not_skipped_findings(self.get_open_findings(findings)), ['notapplicable', 'unhealthy'],
                              threshold=self._threshold,
                              object_type=self._type,
                              name=self.subscription_id
@@ -424,6 +429,11 @@ class ResourceGroup:
         return [finding for finding in findings
                 if not finding.is_skipped]
 
+    def exclude_findings_by_state(self, findings, states):
+        """Returns findings excluding those with specific states"""
+        return [finding for finding in findings
+                if not finding.state in states]
+
     def get_energy_label(self, findings):
         """Calculates the energy label for the resource group.
 
@@ -434,7 +444,7 @@ class ResourceGroup:
             The energy label of the resource group based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=self.get_not_skipped_findings(self.get_open_findings(findings)),
+        return EnergyLabeler(findings=self.exclude_findings_by_state(self.get_not_skipped_findings(self.get_open_findings(findings)), ['notapplicable', 'unhealthy']),
                              threshold=self._threshold,
                              object_type=self._type,
                              name=self.name
