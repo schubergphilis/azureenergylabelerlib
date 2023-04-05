@@ -387,7 +387,7 @@ class Subscription:
             The energy label of the resource group based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=self.exclude_findings_by_state(self.get_not_skipped_findings(self.get_open_findings(findings)), ['notapplicable', 'unhealthy'],
+        return EnergyLabeler(findings=self.exclude_findings_by_state(self.get_not_skipped_findings(self.get_open_findings(findings)), ['notapplicable', 'unhealthy']),
                              threshold=self._threshold,
                              object_type=self._type,
                              name=self.subscription_id
