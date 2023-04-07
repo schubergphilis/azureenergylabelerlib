@@ -323,6 +323,22 @@ class FindingParserLabeler:
         return [finding for finding in findings if finding.state not in states]
 
     @staticmethod
+    def filter_findings(findings, states):
+        """Filters the provided findings to end up with only the useful ones.
+
+        Args:
+            findings: All the findings.
+            states: The states to filter out.
+
+        Returns:
+            A list of defender for cloud findings.
+
+        """
+        open_findings = FindingParserLabeler.get_open_findings(findings)
+        not_skipped_findings = FindingParserLabeler.get_not_skipped_findings(open_findings)
+        return FindingParserLabeler.exclude_findings_by_state(not_skipped_findings, states)
+
+    @staticmethod
     def _get_energy_label(findings, states, threshold, type_, name):
         """Calculates the energy label for the entity.
 
@@ -337,10 +353,7 @@ class FindingParserLabeler:
             The energy label of the entity based on the provided configuration.
 
         """
-        open_findings = FindingParserLabeler.get_open_findings(findings)
-        not_skipped_findings = FindingParserLabeler.get_not_skipped_findings(open_findings)
-        final_findings = FindingParserLabeler.exclude_findings_by_state(not_skipped_findings, states)
-        return EnergyLabeler(findings=final_findings,
+        return EnergyLabeler(findings=FindingParserLabeler.filter_findings(findings, states),
                              threshold=threshold,
                              object_type=type_,
                              name=name
