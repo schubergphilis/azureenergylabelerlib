@@ -334,7 +334,7 @@ class FindingParserLabeler:
             A list of defender for cloud findings.
 
         """
-        open_findings = FindingParserLabeler.get_open_findings(findings)
+        open_findings = FindingParserLabeler._get_open_findings(findings)
         not_skipped_findings = FindingParserLabeler.get_not_skipped_findings(open_findings)
         return FindingParserLabeler.exclude_findings_by_state(not_skipped_findings, states)
 
