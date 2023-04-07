@@ -40,8 +40,9 @@ from .azureenergylabelerlibexceptions import InvalidCredentials
 from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             SUBSCRIPTION_THRESHOLDS,
-                            DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS)
-from .entities import DefenderForCloud, Tenant
+                            DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
+                            FINDING_FILTERING_STATES)
+from .entities import DefenderForCloud, Tenant, FindingParserLabeler
 from .schemas import (resource_group_thresholds_schema,
                       subscription_thresholds_schema,
                       tenant_thresholds_schema)
@@ -152,6 +153,11 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
     def defender_for_cloud_findings(self):
         """Defender for cloud findings."""
         return self._defender_for_cloud.get_findings(frameworks=self._frameworks)
+
+    @property
+    def filtered_defender_for_cloud_findings(self, states=FINDING_FILTERING_STATES):
+        """Filtered defender for cloud findings."""
+        return FindingParserLabeler.filter_findings(self.defender_for_cloud_findings, states)
 
     @property
     def matching_frameworks(self):
