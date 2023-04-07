@@ -220,3 +220,5 @@ ENERGY_LABEL_CALCULATION_CONFIG = [
         'energy_label_object': SubscriptionEnergyLabel
     }
 ]
+
+FINDING_FILTERING_STATES = ('notapplicable', 'unhealthy')

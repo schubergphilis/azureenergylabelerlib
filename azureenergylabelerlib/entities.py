@@ -47,7 +47,8 @@ from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
                             FINDINGS_QUERY_STRING,
                             FILE_EXPORT_TYPES,
-                            ENERGY_LABEL_CALCULATION_CONFIG)
+                            ENERGY_LABEL_CALCULATION_CONFIG,
+                            FINDING_FILTERING_STATES)
 from .validations import validate_allowed_denied_subscription_ids, DestinationPath
 from .azureenergylabelerlibexceptions import (SubscriptionNotPartOfTenant,
                                               InvalidFrameworks,
@@ -304,7 +305,49 @@ class Tenant:
                                  coverage=f'{coverage_percentage:.2f}%')
 
 
-class Subscription:
+class FindingParserLabeler:
+
+    @staticmethod
+    def _get_open_findings(findings, attribute, match):
+        """Findings for the subscription."""
+        return [finding for finding in findings if getattr(finding, attribute).lower() == match.lower()]
+
+    @staticmethod
+    def get_not_skipped_findings(findings):
+        """Not skipped findings for the subscription."""
+        return [finding for finding in findings if not finding.is_skipped]
+
+    @staticmethod
+    def exclude_findings_by_state(findings, states):
+        """Returns findings excluding those with specific states."""
+        return [finding for finding in findings if finding.state not in states]
+
+    @staticmethod
+    def _get_energy_label(findings, states, threshold, type_, name):
+        """Calculates the energy label for the entity.
+
+        Args:
+            findings: List of defender for cloud findings.
+            states: The states to filter out findings for.
+            threshold: The threshold to apply.
+            type_: The object type of the entity.
+            name: The name of the entity.
+
+        Returns:
+            The energy label of the entity based on the provided configuration.
+
+        """
+        open_findings = FindingParserLabeler.get_open_findings(findings)
+        not_skipped_findings = FindingParserLabeler.get_not_skipped_findings(open_findings)
+        final_findings = FindingParserLabeler.exclude_findings_by_state(not_skipped_findings, states)
+        return EnergyLabeler(findings=final_findings,
+                             threshold=threshold,
+                             object_type=type_,
+                             name=name
+                             ).energy_label
+
+
+class Subscription(FindingParserLabeler):
     """Models the Azure subscription that can label itself."""
 
     def __init__(self,
@@ -363,38 +406,24 @@ class Subscription:
         return list(policy_client.policy_exemptions.list())
 
     def get_open_findings(self, findings):
-        """Findings for the subscription."""
-        return [finding for finding in findings
-                if finding.subscription_id == self.subscription_id]
+        """Findings for the resource group."""
+        return self._get_open_findings(findings, 'subscription_id', self.subscription_id)
 
-    def get_not_skipped_findings(self, findings):
-        """Not skipped findings for the subscription."""
-        return [finding for finding in findings
-                if not finding.is_skipped]
-
-    def exclude_findings_by_state(self, findings, states):
-        """Returns findings excluding those with specific states."""
-        return [finding for finding in findings
-                if finding.state not in states]
-
-    def get_energy_label(self, findings):
-        """Calculates the energy label for the resource group.
+    def get_energy_label(self, findings, states=FINDING_FILTERING_STATES):
+        """Calculates the energy label for the Subscription.
 
         Args:
             findings: Either a list of defender for cloud findings.
+            states: The states to filter findings out for.
 
         Returns:
             The energy label of the resource group based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=self.exclude_findings_by_state(self.get_not_skipped_findings(self.get_open_findings(findings)), ['notapplicable', 'unhealthy']),
-                             threshold=self._threshold,
-                             object_type=self._type,
-                             name=self.subscription_id
-                             ).energy_label
+        return self._get_energy_label(findings, states, self._threshold, self._type, self.subscription_id)
 
 
-class ResourceGroup:
+class ResourceGroup(FindingParserLabeler):
     """Models the Azure subscription's resource group that can label itself."""
 
     def __init__(self,
@@ -421,34 +450,20 @@ class ResourceGroup:
 
     def get_open_findings(self, findings):
         """Findings for the resource group."""
-        return [finding for finding in findings
-                if finding.resource_group.lower() == self.name.lower()]
+        return self._get_open_findings(findings, 'resource_group', self.name)
 
-    def get_not_skipped_findings(self, findings):
-        """Not skipped findings for the resource group."""
-        return [finding for finding in findings
-                if not finding.is_skipped]
-
-    def exclude_findings_by_state(self, findings, states):
-        """Returns findings excluding those with specific states."""
-        return [finding for finding in findings
-                if finding.state not in states]
-
-    def get_energy_label(self, findings):
+    def get_energy_label(self, findings, states=FINDING_FILTERING_STATES):
         """Calculates the energy label for the resource group.
 
         Args:
             findings: Either a list of defender for cloud findings.
+            states: The states to filter findings out for.
 
         Returns:
             The energy label of the resource group based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=self.exclude_findings_by_state(self.get_not_skipped_findings(self.get_open_findings(findings)), ['notapplicable', 'unhealthy']),
-                             threshold=self._threshold,
-                             object_type=self._type,
-                             name=self.name
-                             ).energy_label
+        return self._get_energy_label(findings, states, self._threshold, self._type, self.name)
 
 
 class Finding:
