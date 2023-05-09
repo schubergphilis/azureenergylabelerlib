@@ -155,9 +155,10 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
         return self._defender_for_cloud.get_findings(frameworks=self._frameworks)
 
     @property
-    def filtered_defender_for_cloud_findings(self, states=FINDING_FILTERING_STATES):
+    def filtered_defender_for_cloud_findings(self):
         """Filtered defender for cloud findings."""
-        return FindingParserLabeler.filter_findings(self.defender_for_cloud_findings, states)
+        not_skipped_findings = FindingParserLabeler.get_not_skipped_findings(self.defender_for_cloud_findings)
+        return FindingParserLabeler.exclude_findings_by_state(not_skipped_findings, FINDING_FILTERING_STATES)
 
     @property
     def matching_frameworks(self):

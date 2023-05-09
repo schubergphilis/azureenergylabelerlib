@@ -323,28 +323,11 @@ class FindingParserLabeler:
         return [finding for finding in findings if finding.state not in states]
 
     @staticmethod
-    def filter_findings(findings, states):
-        """Filters the provided findings to end up with only the useful ones.
-
-        Args:
-            findings: All the findings.
-            states: The states to filter out.
-
-        Returns:
-            A list of defender for cloud findings.
-
-        """
-        # open_findings = FindingParserLabeler.get_open_findings(findings)
-        not_skipped_findings = FindingParserLabeler.get_not_skipped_findings(findings)
-        return FindingParserLabeler.exclude_findings_by_state(not_skipped_findings, states)
-
-    @staticmethod
-    def _get_energy_label(findings, states, threshold, type_, name):
+    def _get_energy_label(findings, threshold, type_, name):
         """Calculates the energy label for the entity.
 
         Args:
             findings: List of defender for cloud findings.
-            states: The states to filter out findings for.
             threshold: The threshold to apply.
             type_: The object type of the entity.
             name: The name of the entity.
@@ -353,7 +336,7 @@ class FindingParserLabeler:
             The energy label of the entity based on the provided configuration.
 
         """
-        return EnergyLabeler(findings=FindingParserLabeler.filter_findings(findings, states),
+        return EnergyLabeler(findings=findings,
                              threshold=threshold,
                              object_type=type_,
                              name=name
@@ -433,7 +416,9 @@ class Subscription(FindingParserLabeler):
             The energy label of the resource group based on the provided configuration.
 
         """
-        return self._get_energy_label(findings, states, self._threshold, self._type, self.subscription_id)
+        not_skipped_findings = self.get_not_skipped_findings(self.get_open_findings(findings))
+        return self._get_energy_label(self.exclude_findings_by_state(not_skipped_findings, states),
+                                      self._threshold, self._type, self.subscription_id)
 
 
 class ResourceGroup(FindingParserLabeler):
@@ -476,7 +461,9 @@ class ResourceGroup(FindingParserLabeler):
             The energy label of the resource group based on the provided configuration.
 
         """
-        return self._get_energy_label(findings, states, self._threshold, self._type, self.name)
+        not_skipped_findings = self.get_not_skipped_findings(self.get_open_findings(findings))
+        return self._get_energy_label(self.exclude_findings_by_state(not_skipped_findings, states),
+                                      self._threshold, self._type, self.name)
 
 
 class Finding:

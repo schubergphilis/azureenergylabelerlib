@@ -221,4 +221,4 @@ ENERGY_LABEL_CALCULATION_CONFIG = [
     }
 ]
 
-FINDING_FILTERING_STATES = ('notapplicable',)
+FINDING_FILTERING_STATES = ('notapplicable', 'healthy')
