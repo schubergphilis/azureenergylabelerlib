@@ -48,7 +48,8 @@ from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_METRIC_EXPORT_TYPES,
                             TENANT_METRIC_EXPORT_TYPES,
                             ALL_SUBSCRIPTION_EXPORT_DATA,
-                            ALL_TENANT_EXPORT_TYPES
+                            ALL_TENANT_EXPORT_TYPES,
+                            FINDING_FILTERING_STATES
                             )
 
 from .entities import Subscription, DataExporter
@@ -90,6 +91,7 @@ assert ALL_SUBSCRIPTION_EXPORT_DATA
 assert TENANT_METRIC_EXPORT_TYPES
 assert SUBSCRIPTION_METRIC_EXPORT_TYPES
 assert RESOURCE_GROUP_METRIC_EXPORT_TYPES
+assert FINDING_FILTERING_STATES
 
 assert Subscription
 assert DataExporter
