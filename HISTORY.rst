@@ -70,3 +70,9 @@ History
 ------------------
 
 * Check subscription tenant id on Tenant init
+
+
+3.2.0 (11-05-2023)
+------------------
+
+* Improved how findings are filtered
