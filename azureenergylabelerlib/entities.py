@@ -114,15 +114,22 @@ class DefenderForCloud:
         """
         finding_details_set = set()
         arg_client = arg.ResourceGraphClient(self._credential)
-        arg_query_options = arg.models.QueryRequestOptions(result_format="objectArray")
         frameworks = DefenderForCloud.validate_frameworks(frameworks)
+        done = False
+        query_options = {'result_format': 'objectArray'}
         for framework in frameworks:
-            arg_query = arg.models.QueryRequest(subscriptions=self.subscription_list,
-                                                query=FINDINGS_QUERY_STRING.format(framework=framework),
-                                                options=arg_query_options)
-            finding_data = arg_client.resources(arg_query).data
-            for finding_details in finding_data:
-                finding_details_set.add(Finding(finding_details))
+            while not done:
+                arg_query_options = arg.models.QueryRequestOptions(**query_options)
+                arg_query = arg.models.QueryRequest(subscriptions=self.subscription_list,
+                                                    query=FINDINGS_QUERY_STRING.format(framework=framework),
+                                                    options=arg_query_options)
+                response = arg_client.resources(arg_query)
+                for finding_details in response.data:
+                    finding_details_set.add(Finding(finding_details))
+                if response.skip_token:
+                    query_options.update({'skip_token': response.skip_token})
+                else:
+                    done = True
         return list(finding_details_set)
 
 

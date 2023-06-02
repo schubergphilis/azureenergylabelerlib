@@ -39,7 +39,7 @@ from .datamodels import (TenantEnergyLabelingData,
                          SubscriptionExemptedPolicies)
 from .labels import ResourceGroupEnergyLabel, SubscriptionEnergyLabel
 
-__author__ = 'Sayantan Khanra <ctyfoxylos@schubergphilis.com>'
+__author__ = 'Sayantan Khanra <skhanra@schubergphilis.com>'
 __docformat__ = '''google'''
 __date__ = '''09-11-2021'''
 __copyright__ = '''Copyright 2021, Sayantan Khanra'''
