@@ -115,9 +115,9 @@ class DefenderForCloud:
         finding_details_set = set()
         arg_client = arg.ResourceGraphClient(self._credential)
         frameworks = DefenderForCloud.validate_frameworks(frameworks)
-        done = False
         query_options = {'result_format': 'objectArray'}
         for framework in frameworks:
+            done = False
             while not done:
                 arg_query_options = arg.models.QueryRequestOptions(**query_options)
                 arg_query = arg.models.QueryRequest(subscriptions=self.subscription_list,
