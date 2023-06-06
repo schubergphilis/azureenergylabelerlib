@@ -114,14 +114,14 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
         self._tenant_id = tenant_id
         self.resource_group_thresholds = resource_group_thresholds_schema.validate(resource_group_thresholds)
         self.tenant_thresholds = tenant_thresholds_schema.validate(tenant_thresholds)
-        self.subscription_thresolds = subscription_thresholds_schema.validate(subscription_thresholds)
+        self.subscription_thresholds = subscription_thresholds_schema.validate(subscription_thresholds)
         self.tenant_credentials = self._fetch_credentials(credentials)
         self.allowed_subscription_ids = allowed_subscription_ids
         self.denied_subscription_ids = denied_subscription_ids
         self._tenant = Tenant(credential=self.tenant_credentials,
                               tenant_id=self._tenant_id,
                               thresholds=self.tenant_thresholds,
-                              subscription_thresholds=self.subscription_thresolds,
+                              subscription_thresholds=self.subscription_thresholds,
                               resource_group_thresholds=self.resource_group_thresholds,
                               allowed_subscription_ids=self.allowed_subscription_ids,
                               denied_subscription_ids=self.denied_subscription_ids)
