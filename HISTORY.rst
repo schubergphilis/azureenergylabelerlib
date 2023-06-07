@@ -76,3 +76,10 @@ History
 ------------------
 
 * Improved how findings are filtered
+
+
+3.2.1 (07-06-2023)
+------------------
+
+* Fixed pagination
+* Fixed typos
