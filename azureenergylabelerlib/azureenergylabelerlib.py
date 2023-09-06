@@ -96,7 +96,9 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
         Inclusion list of subscripitions to be evaluated
     denied_subscription_ids : Any
         Exclude list of subscriptions to be evaluated
-
+    denied_resource_group_names : List
+        List of resource group names to be excluded
+        
     """
 
     # pylint: disable=dangerous-default-value
@@ -109,7 +111,7 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
                  credentials=None,
                  allowed_subscription_ids=None,
                  denied_subscription_ids=None,
-                 ):
+                 denied_resource_group_names=None):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
         self._tenant_id = tenant_id
         self.resource_group_thresholds = resource_group_thresholds_schema.validate(resource_group_thresholds)
@@ -118,13 +120,15 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
         self.tenant_credentials = self._fetch_credentials(credentials)
         self.allowed_subscription_ids = allowed_subscription_ids
         self.denied_subscription_ids = denied_subscription_ids
+        self.denied_resource_group_names = denied_resource_group_names
         self._tenant = Tenant(credential=self.tenant_credentials,
                               tenant_id=self._tenant_id,
                               thresholds=self.tenant_thresholds,
                               subscription_thresholds=self.subscription_thresholds,
                               resource_group_thresholds=self.resource_group_thresholds,
                               allowed_subscription_ids=self.allowed_subscription_ids,
-                              denied_subscription_ids=self.denied_subscription_ids)
+                              denied_subscription_ids=self.denied_subscription_ids,
+                              denied_resource_group_names=self.denied_resource_group_names)
         self._defender_for_cloud = self._initialize_defender_for_cloud(credential=self.tenant_credentials)
         self._frameworks = DefenderForCloud.validate_frameworks(frameworks)
         self._tenant_energy_label = None
@@ -152,7 +156,9 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
     @cached(cache=TTLCache(maxsize=150000, ttl=120))
     def defender_for_cloud_findings(self):
         """Defender for cloud findings."""
-        return self._defender_for_cloud.get_findings(frameworks=self._frameworks)
+        filtered_findings = [finding for finding in self._defender_for_cloud.get_findings(frameworks=self._frameworks) \
+                             if finding.resource_group.upper() not in self.denied_resource_group_names]
+        return filtered_findings
 
     @property
     def filtered_defender_for_cloud_findings(self):
