@@ -98,7 +98,7 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
         Exclude list of subscriptions to be evaluated
     denied_resource_group_names : List
         List of resource group names to be excluded
-        
+
     """
 
     # pylint: disable=dangerous-default-value
@@ -156,7 +156,7 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
     @cached(cache=TTLCache(maxsize=150000, ttl=120))
     def defender_for_cloud_findings(self):
         """Defender for cloud findings."""
-        filtered_findings = [finding for finding in self._defender_for_cloud.get_findings(frameworks=self._frameworks) \
+        filtered_findings = [finding for finding in self._defender_for_cloud.get_findings(frameworks=self._frameworks)
                              if finding.resource_group.upper() not in self.denied_resource_group_names]
         return filtered_findings
 
