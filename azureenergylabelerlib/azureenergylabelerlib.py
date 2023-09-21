@@ -157,7 +157,7 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
     def defender_for_cloud_findings(self):
         """Defender for cloud findings."""
         filtered_findings = [finding for finding in self._defender_for_cloud.get_findings(frameworks=self._frameworks)
-                             if finding.resource_group.upper() not in self.denied_resource_group_names]
+                             if finding.resource_group not in [rg.lower() for rg in self.denied_resource_group_names]]
         return filtered_findings
 
     @property
