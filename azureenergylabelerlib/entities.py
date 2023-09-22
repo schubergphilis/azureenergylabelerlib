@@ -134,7 +134,7 @@ class DefenderForCloud:
 
 
 class Tenant:
-    """Models the Azure tenant and retrieves subscrptions from it."""
+    """Models the Azure tenant and retrieves subscriptions from it."""
 
     # pylint: disable=too-many-arguments,dangerous-default-value
     def __init__(self,
@@ -144,13 +144,15 @@ class Tenant:
                  subscription_thresholds=SUBSCRIPTION_THRESHOLDS,
                  resource_group_thresholds=RESOURCE_GROUP_THRESHOLDS,
                  allowed_subscription_ids=None,
-                 denied_subscription_ids=None):
+                 denied_subscription_ids=None,
+                 denied_resource_group_names=None):
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
         self.tenant_id = tenant_id
         self.credential = credential
         self.thresholds = thresholds
         self.subscription_thresholds = subscription_thresholds
         self.resource_group_thresholds = resource_group_thresholds
+        self.denied_resource_group_names = denied_resource_group_names
         subscription_ids = [subscription.subscription_id for subscription in self.subscriptions]
         allowed_subscription_ids, denied_subscription_ids = validate_allowed_denied_subscription_ids(
             allowed_subscription_ids,
@@ -192,7 +194,7 @@ class Tenant:
 
         """
         subscription_client = SubscriptionClient(self.credential)
-        return [Subscription(self.credential, subscription_detail) for subscription_detail in
+        return [Subscription(self.credential, subscription_detail, self.denied_resource_group_names) for subscription_detail in
                 subscription_client.subscriptions.list() if subscription_detail.tenant_id == self.tenant_id]
 
     def get_allowed_subscriptions(self):
@@ -355,11 +357,12 @@ class Subscription(FindingParserLabeler):
 
     def __init__(self,
                  credential,
-                 data
-                 ):
+                 data,
+                 denied_resource_group_names):
         self._credential = credential
         self._data = data
         self._threshold = SUBSCRIPTION_THRESHOLDS
+        self.denied_resource_group_names = denied_resource_group_names
         self._logger = logging.getLogger(f'{LOGGER_BASENAME}.{self.__class__.__name__}')
 
     @property
@@ -399,7 +402,7 @@ class Subscription(FindingParserLabeler):
         resource_group_client = ResourceManagementClient(self._credential,
                                                          self.subscription_id)
         return [ResourceGroup(resource_group_detail) for resource_group_detail in
-                resource_group_client.resource_groups.list()]
+                resource_group_client.resource_groups.list() if resource_group_detail.name not in self.denied_resource_group_names]
 
     @property
     @cached(cache=TTLCache(maxsize=1000, ttl=600))
