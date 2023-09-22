@@ -1440,14 +1440,6 @@
             "markers": "python_version >= '3.7'",
             "version": "==2.0.0"
         },
-        "rich": {
-            "hashes": [
-                "sha256:87b43e0543149efa1253f485cd845bb7ee54df16c9617b8a893650ab84b4acb6",
-                "sha256:9257b468badc3d347e146a4faa268ff229039d4c2d176ab0cffb4c4fbc73d5d9"
-            ],
-            "markers": "python_full_version >= '3.7.0'",
-            "version": "==13.5.3"
-        },
         "semver": {
             "hashes": [
                 "sha256:ced8b23dceb22134307c1b8abfa523da14198793d9787ac838e70e29e77458d4",
