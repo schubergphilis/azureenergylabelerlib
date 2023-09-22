@@ -83,3 +83,9 @@ History
 
 * Fixed pagination
 * Fixed typos
+
+
+3.3.0 (22-09-2023)
+------------------
+
+* feat: ability added to exclude resource groups from reporting.
