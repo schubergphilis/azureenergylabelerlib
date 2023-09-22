@@ -134,7 +134,7 @@ class DefenderForCloud:
 
 
 class Tenant:
-    """Models the Azure tenant and retrieves subscrptions from it."""
+    """Models the Azure tenant and retrieves subscriptions from it."""
 
     # pylint: disable=too-many-arguments,dangerous-default-value
     def __init__(self,
