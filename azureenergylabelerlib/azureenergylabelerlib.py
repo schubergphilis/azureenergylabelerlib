@@ -155,7 +155,12 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
     @property
     @cached(cache=TTLCache(maxsize=150000, ttl=120))
     def defender_for_cloud_findings(self):
-        """Defender for cloud findings."""
+        """Defender for cloud findings.
+
+        The self.denied_resource_group_names is turned into lowercase since the,
+        <azure.mgmt.resourcegraph.models._models_py3.QueryResponse object has the resource group in lowercase.
+
+        """
         filtered_findings = [finding for finding in self._defender_for_cloud.get_findings(frameworks=self._frameworks)
                              if finding.resource_group not in [rg.lower() for rg in self.denied_resource_group_names]]
         return filtered_findings
