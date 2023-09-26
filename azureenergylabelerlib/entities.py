@@ -358,7 +358,7 @@ class Subscription(FindingParserLabeler):
     def __init__(self,
                  credential,
                  data,
-                 denied_resource_group_names):
+                 denied_resource_group_names=None):
         self._credential = credential
         self._data = data
         self._threshold = SUBSCRIPTION_THRESHOLDS
