@@ -89,3 +89,9 @@ History
 ------------------
 
 * feat: ability added to exclude resource groups from reporting.
+
+
+3.3.1 (02-10-2023)
+------------------
+
+* fix: denied_resource_group_names is optional in the rest of the code, so also should be in Subscription.
