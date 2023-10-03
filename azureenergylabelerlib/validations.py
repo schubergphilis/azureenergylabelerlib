@@ -68,9 +68,7 @@ def is_valid_resource_group_name(resource_group_name):
     if not isinstance(resource_group_name, str):
         return False
     pattern = r'^(?!.*\.$)[a-zA-Z0-9._()-]{1,90}$'
-    if not re.match(pattern, resource_group_name):
-        return False
-    return True
+    return re.match(pattern, resource_group_name)
 
 
 def are_valid_resource_group_names(resource_group_names):
