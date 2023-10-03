@@ -64,3 +64,7 @@ class InvalidFrameworks(Exception):
 
 class InvalidPath(Exception):
     """The path provided is not valid."""
+
+
+class InvalidResourceGroupListProvided(Exception):
+    """The provided list of resource groups names are not valid Azure resource groups names."""

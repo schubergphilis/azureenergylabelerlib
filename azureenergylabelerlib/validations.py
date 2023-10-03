@@ -32,8 +32,10 @@ Main code for validations.
 """
 
 import logging
+import re
 from urllib.parse import urlparse
-from .azureenergylabelerlibexceptions import (InvalidSubscriptionListProvided,
+from .azureenergylabelerlibexceptions import (InvalidResourceGroupListProvided,
+                                              InvalidSubscriptionListProvided,
                                               MutuallyExclusiveArguments,
                                               InvalidPath)
 from .configuration import SUBSCRIPTION_ID_LENGTH
@@ -51,6 +53,60 @@ __status__ = '''Development'''  # "Prototype", "Development", "Production".
 LOGGER_BASENAME = '''validations'''
 LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
+
+
+def is_valid_resource_group_name(resource_group_name):
+    """Checks whether a provided resource group name is a valid resource group name.
+
+    Args:
+        resource group name (str): A resource group name string.
+
+    Returns:
+        True if the provided value is a valid Azure resource group name, false otherwise.
+
+    """
+    pattern = r'^(?!.*\.$)[a-zA-Z0-9._()-]{1,90}$'
+    if not re.match(pattern, resource_group_name):
+        return False
+    return True
+
+
+def are_valid_resource_group_names(resource_group_name):
+    """Checks whether the provided list contains only valid Azure resource group names.
+
+    Args:
+        resource_group_name (list): A list of resource group names strings.
+
+    Returns:
+        True if the provided list contains only valid Azure resource group name, false otherwise.
+
+    """
+    return all(is_valid_resource_group_name(resource_group_name) for resource_group_name in resource_group_name)
+
+
+def validate_resource_group_names(resource_group_names=None):
+    """Validates a provided iterable that it contains only valid Azure resource groups names.
+
+    Args:
+        resource_group_names (list): Iterable of strings with Azure resource groups names.
+
+    Raises:
+        TypeError: If the resource group names is not a iterable.
+        InvalidResourceGroupListProvided: If any of the provided resource groups names is not a valid.
+
+    Returns:
+        list: A list of valid Azure resource groups names.
+
+    """
+    if not resource_group_names:
+        return []
+    if not isinstance(resource_group_names, (list, tuple, set)):
+        raise TypeError(f'Only list, tuple, set of subscriptions are accepted input, '
+                        f'received: {type(resource_group_names)}')
+    if not are_valid_resource_group_names(resource_group_names):
+        raise InvalidResourceGroupListProvided(
+            f'The list provided contains invalid resource groups names: {resource_group_names}')
+    return resource_group_names
 
 
 def is_valid_subscription_id(subscription_id):

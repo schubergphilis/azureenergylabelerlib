@@ -36,6 +36,8 @@ from cachetools import cached, TTLCache
 from azure.core.exceptions import ClientAuthenticationError
 from azure.identity import DefaultAzureCredential
 from azure.mgmt.resource import SubscriptionClient
+
+from azureenergylabelerlib.validations import validate_resource_group_names
 from .azureenergylabelerlibexceptions import InvalidCredentials
 from .configuration import (TENANT_THRESHOLDS,
                             RESOURCE_GROUP_THRESHOLDS,
@@ -120,7 +122,7 @@ class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
         self.tenant_credentials = self._fetch_credentials(credentials)
         self.allowed_subscription_ids = allowed_subscription_ids
         self.denied_subscription_ids = denied_subscription_ids
-        self.denied_resource_group_names = denied_resource_group_names
+        self.denied_resource_group_names = validate_resource_group_names(denied_resource_group_names)
         self._tenant = Tenant(credential=self.tenant_credentials,
                               tenant_id=self._tenant_id,
                               thresholds=self.tenant_thresholds,
