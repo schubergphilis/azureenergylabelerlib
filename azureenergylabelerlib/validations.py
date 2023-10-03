@@ -94,7 +94,7 @@ def validate_resource_group_names(resource_group_names=None):
 
     Raises:
         TypeError: If the resource group names is not a iterable.
-        InvalidResourceGroupListProvided: If any of the provided resource groups names is not a valid.
+        InvalidResourceGroupListProvided: If any of the provided resource groups names is not valid.
 
     Returns:
         list: A list of valid Azure resource groups names.
