@@ -65,23 +65,25 @@ def is_valid_resource_group_name(resource_group_name):
         True if the provided value is a valid Azure resource group name, false otherwise.
 
     """
+    if not isinstance(resource_group_name, str):
+        return False
     pattern = r'^(?!.*\.$)[a-zA-Z0-9._()-]{1,90}$'
     if not re.match(pattern, resource_group_name):
         return False
     return True
 
 
-def are_valid_resource_group_names(resource_group_name):
+def are_valid_resource_group_names(resource_group_names):
     """Checks whether the provided list contains only valid Azure resource group names.
 
     Args:
-        resource_group_name (list): A list of resource group names strings.
+        resource_group_names (list): A list of resource group names strings.
 
     Returns:
         True if the provided list contains only valid Azure resource group name, false otherwise.
 
     """
-    return all(is_valid_resource_group_name(resource_group_name) for resource_group_name in resource_group_name)
+    return all(is_valid_resource_group_name(resource_group_name) for resource_group_name in resource_group_names)
 
 
 def validate_resource_group_names(resource_group_names=None):
