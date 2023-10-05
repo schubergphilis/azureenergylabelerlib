@@ -57,6 +57,9 @@ from .validations import (validate_subscription_ids,
                           are_valid_subscription_ids,
                           is_valid_subscription_id,
                           validate_allowed_denied_subscription_ids,
+                          validate_resource_group_names,
+                          are_valid_resource_group_names,
+                          is_valid_resource_group_name,
                           DestinationPath)
 
 __author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
@@ -100,4 +103,7 @@ assert validate_subscription_ids
 assert are_valid_subscription_ids
 assert validate_allowed_denied_subscription_ids
 assert is_valid_subscription_id
+assert validate_resource_group_names
+assert are_valid_resource_group_names
+assert is_valid_resource_group_name
 assert DestinationPath
