@@ -95,3 +95,9 @@ History
 ------------------
 
 * fix: denied_resource_group_names is optional in the rest of the code, so also should be in Subscription.
+
+
+3.3.2 (05-10-2023)
+------------------
+
+* feat: added validation for azure resource group names.
