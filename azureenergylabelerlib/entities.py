@@ -408,7 +408,7 @@ class Subscription(FindingParserLabeler):
     @cached(cache=TTLCache(maxsize=1000, ttl=600))
     def exempted_policies(self):
         """Policies exempted for this subscription."""
-        policy_client = PolicyClient(credential=self._credential, subscription_id=self.subscription_id)
+        policy_client = PolicyClient(credential=self._credential, subscription_id=self.subscription_id, api_version="2020-07-01-preview")
         return list(policy_client.policy_exemptions.list())
 
     def get_open_findings(self, findings):
