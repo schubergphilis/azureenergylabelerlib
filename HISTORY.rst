@@ -101,3 +101,9 @@ History
 ------------------
 
 * feat: added validation for azure resource group names.
+
+
+3.3.3 (06-06-2024)
+------------------
+
+* Pin policy api version.
