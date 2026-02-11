@@ -107,3 +107,8 @@ History
 ------------------
 
 * Pin policy api version.
+
+3.3.4 (2024-06-11)
+------------------
+
+* Pin azure.mgmt.resource version.
