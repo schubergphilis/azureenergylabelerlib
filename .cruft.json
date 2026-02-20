@@ -1,0 +1,19 @@
+{
+  "template": "https://github.com/schubergphilis/paleofuturistic_python",
+  "commit": "16b72ae073597208b3520e1d18f82954481bbd9b",
+  "checkout": "latest",
+  "context": {
+    "cookiecutter": {
+      "project_name": "azureenergylabelerlib",
+      "project_slug": "azureenergylabelerlib",
+      "project_description": "A python library that generates energy labels based on findings in Azure subscriptions",
+      "full_name": "Azure Energy Labeler Library",
+      "email": "rbortolameotti@schubergphilis.com",
+      "python_version": "3.12",
+      "include_apache_license": true,
+      "_template": "https://github.com/schubergphilis/paleofuturistic_python",
+      "_commit": "16b72ae073597208b3520e1d18f82954481bbd9b"
+    }
+  },
+  "directory": null
+}
