@@ -220,7 +220,10 @@ class LabeledResourceGroupData:
     """Models the data for energy labeling to export."""
 
     def __init__(
-        self, filename: str, labeled_resource_group_data: Any, defender_for_cloud_findings: Any
+        self,
+        filename: str,
+        labeled_resource_group_data: Any,
+        defender_for_cloud_findings: Any,
     ) -> None:
         self.filename = filename
         self._subscription_id = labeled_resource_group_data.get("subscription_id")
@@ -255,7 +258,10 @@ class LabeledResourceGroupsData:
     """Models the data for energy labeling to export."""
 
     def __init__(
-        self, filename: str, labeled_subscriptions: Any, defender_for_cloud_findings: Any
+        self,
+        filename: str,
+        labeled_subscriptions: Any,
+        defender_for_cloud_findings: Any,
     ) -> None:
         self.filename = filename
         self._labeled_subscriptions = labeled_subscriptions
@@ -289,7 +295,10 @@ class LabeledSubscriptionsData:
     """Models the data for energy labeling to export."""
 
     def __init__(
-        self, filename: str, labeled_subscriptions: Any, defender_for_cloud_findings: Any
+        self,
+        filename: str,
+        labeled_subscriptions: Any,
+        defender_for_cloud_findings: Any,
     ) -> None:
         self.filename = filename
         self._labeled_subscriptions = labeled_subscriptions

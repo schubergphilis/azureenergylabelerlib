@@ -175,7 +175,9 @@ class Tenant:
             denied_subscription_ids, subscription_ids
         )
         self._subscriptions_to_be_labeled = None
-        self._targeted_subscriptions_energy_label: AggregateSubscriptionEnergyLabel | None = None
+        self._targeted_subscriptions_energy_label: (
+            AggregateSubscriptionEnergyLabel | None
+        ) = None
 
     @staticmethod
     def _validate_tenant_subscription_ids(
@@ -276,7 +278,9 @@ class Tenant:
                 self._subscriptions_to_be_labeled = self.subscriptions
         return self._subscriptions_to_be_labeled
 
-    def get_labeled_targeted_subscriptions(self, defender_for_cloud_findings: Any) -> Any:
+    def get_labeled_targeted_subscriptions(
+        self, defender_for_cloud_findings: Any
+    ) -> Any:
         """Labels the subscriptions based on the allow and deny list provided.
 
         Args:
@@ -299,7 +303,9 @@ class Tenant:
             labeled_subscriptions.append(subscription)
         return labeled_subscriptions
 
-    def get_energy_label_of_targeted_subscriptions(self, defender_for_cloud_findings: Any) -> Any:
+    def get_energy_label_of_targeted_subscriptions(
+        self, defender_for_cloud_findings: Any
+    ) -> Any:
         """Get the energy label of the targeted subscriptions.
 
         Args:
@@ -426,7 +432,9 @@ class FindingParserLabeler:
 class Subscription(FindingParserLabeler):
     """Models the Azure subscription that can label itself."""
 
-    def __init__(self, credential: Any, data: Any, denied_resource_group_names: Any = None) -> None:
+    def __init__(
+        self, credential: Any, data: Any, denied_resource_group_names: Any = None
+    ) -> None:
         self._credential = credential
         self._data = data
         self._threshold = SUBSCRIPTION_THRESHOLDS
@@ -493,7 +501,9 @@ class Subscription(FindingParserLabeler):
             findings, "subscription_id", self.subscription_id
         )
 
-    def get_energy_label(self, findings: Any, states: Any = FINDING_FILTERING_STATES) -> Any:
+    def get_energy_label(
+        self, findings: Any, states: Any = FINDING_FILTERING_STATES
+    ) -> Any:
         """Calculates the energy label for the Subscription.
 
         Args:
@@ -542,7 +552,9 @@ class ResourceGroup(FindingParserLabeler):
         """Findings for the resource group."""
         return self._get_open_findings(findings, "resource_group", self.name)
 
-    def get_energy_label(self, findings: Any, states: Any = FINDING_FILTERING_STATES) -> Any:
+    def get_energy_label(
+        self, findings: Any, states: Any = FINDING_FILTERING_STATES
+    ) -> Any:
         """Calculates the energy label for the resource group.
 
         Args:
@@ -834,7 +846,9 @@ class EnergyLabeler:
     Returns energy label for resource groups and subscriptions.
     """
 
-    def __init__(self, object_type: Any, name: Any, findings: Any, threshold: Any) -> None:
+    def __init__(
+        self, object_type: Any, name: Any, findings: Any, threshold: Any
+    ) -> None:
         self.findings = findings
         self.threshold = threshold
         self.name = name
