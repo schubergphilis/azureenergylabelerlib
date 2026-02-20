@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 # File: test_azureenergylabelerlib.py
 #
 # Copyright 2022 Sayantan Khanra
@@ -35,24 +34,25 @@ Tests for `azureenergylabelerlib` module.
 
 from betamax.fixtures import unittest
 
-__author__ = '''Sayantan Khanra <skhanra@schubergphilis.com>'''
-__docformat__ = '''google'''
-__date__ = '''22-04-2022'''
-__copyright__ = '''Copyright 2022, Sayantan Khanra'''
+__author__ = """Sayantan Khanra <skhanra@schubergphilis.com>"""
+__docformat__ = """google"""
+__date__ = """22-04-2022"""
+__copyright__ = """Copyright 2022, Sayantan Khanra"""
 __credits__ = ["Sayantan Khanra"]
-__license__ = '''MIT'''
-__maintainer__ = '''Sayantan Khanra'''
-__email__ = '''<skhanra@schubergphilis.com>'''
-__status__ = '''Development'''  # "Prototype", "Development", "Production".
+__license__ = """MIT"""
+__maintainer__ = """Sayantan Khanra"""
+__email__ = """<skhanra@schubergphilis.com>"""
+__status__ = """Development"""  # "Prototype", "Development", "Production".
 
 
 class TestAzureenergylabelerlib(unittest.BetamaxTestCase):
-
     def setUp(self):
         """
         Test set up
 
-        This is where you can setup things that you use throughout the tests. This method is called before every test.
+        This is where you can setup things that you use
+        throughout the tests. This method is called
+        before every test.
         """
         pass
 
@@ -60,6 +60,8 @@ class TestAzureenergylabelerlib(unittest.BetamaxTestCase):
         """
         Test tear down
 
-        This is where you should tear down what you've setup in setUp before. This method is called after every test.
+        This is where you should tear down what you've
+        setup in setUp before. This method is called
+        after every test.
         """
         pass
