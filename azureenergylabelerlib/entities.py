@@ -314,8 +314,8 @@ class Tenant:
                                  worst_label=aggregate_label.worst_label,
                                  coverage=f'{coverage_percentage:.2f}%')
 
-class FindingParserLabeler:
 
+class FindingParserLabeler:
 
     @staticmethod
     def _get_open_findings(findings, attribute, match):
