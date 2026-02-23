@@ -35,7 +35,7 @@ from cachetools import cached, TTLCache
 
 from azure.core.exceptions import ClientAuthenticationError
 from azure.identity import DefaultAzureCredential
-from azure.mgmt.resource import SubscriptionClient
+from azure.mgmt.resource.subscriptions import SubscriptionClient
 
 from azureenergylabelerlib.validations import validate_resource_group_names
 from .azureenergylabelerlibexceptions import InvalidCredentials

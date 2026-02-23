@@ -38,7 +38,8 @@ from urllib.parse import urlparse
 from pathlib import Path
 from datetime import datetime
 from cachetools import cached, TTLCache
-from azure.mgmt.resource import SubscriptionClient, ResourceManagementClient
+from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.storage.blob import BlobServiceClient
 from azure.mgmt.resource.policy import PolicyClient
 import azure.mgmt.resourcegraph as arg
@@ -313,7 +314,6 @@ class Tenant:
                                  worst_label=aggregate_label.worst_label,
                                  coverage=f'{coverage_percentage:.2f}%')
 
-
 class FindingParserLabeler:
 
     @staticmethod
@@ -429,7 +429,6 @@ class Subscription(FindingParserLabeler):
         not_skipped_findings = self.get_not_skipped_findings(self.get_open_findings(findings))
         return self._get_energy_label(self.exclude_findings_by_state(not_skipped_findings, states),
                                       self._threshold, self._type, self.subscription_id)
-
 
 class ResourceGroup(FindingParserLabeler):
     """Models the Azure subscription's resource group that can label itself."""
