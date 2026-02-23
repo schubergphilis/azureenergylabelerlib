@@ -18,3 +18,4 @@ azure-storage-blob>=12.18.2
 schema>=0.7.5
 cachetools>=5.3.1
 opnieuw>=1.2.1
+setuptools<=81.0.0
