@@ -316,6 +316,7 @@ class Tenant:
 
 class FindingParserLabeler:
 
+
     @staticmethod
     def _get_open_findings(findings, attribute, match):
         """Findings for the subscription."""
@@ -429,6 +430,7 @@ class Subscription(FindingParserLabeler):
         not_skipped_findings = self.get_not_skipped_findings(self.get_open_findings(findings))
         return self._get_energy_label(self.exclude_findings_by_state(not_skipped_findings, states),
                                       self._threshold, self._type, self.subscription_id)
+
 
 class ResourceGroup(FindingParserLabeler):
     """Models the Azure subscription's resource group that can label itself."""
