@@ -38,7 +38,8 @@ from urllib.parse import urlparse
 from pathlib import Path
 from datetime import datetime
 from cachetools import cached, TTLCache
-from azure.mgmt.resource import SubscriptionClient, ResourceManagementClient
+from azure.mgmt.resource import ResourceManagementClient
+from azure.mgmt.resource.subscriptions import SubscriptionClient
 from azure.storage.blob import BlobServiceClient
 from azure.mgmt.resource.policy import PolicyClient
 import azure.mgmt.resourcegraph as arg
