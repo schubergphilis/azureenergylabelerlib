@@ -1,5 +1,5 @@
-from .azureenergylabelerlib import hello
+from .azureenergylabelerlib import AzureEnergyLabeler 
 
 __all__ = [
-    "hello",
+    "AzureEnergyLabeler",
 ]

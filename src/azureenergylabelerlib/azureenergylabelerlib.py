@@ -72,11 +72,6 @@ LOGGER = logging.getLogger(LOGGER_BASENAME)
 LOGGER.addHandler(logging.NullHandler())
 
 
-def hello() -> str:
-    """Hello."""
-    return "Hello world!"
-
-
 class AzureEnergyLabeler:  # pylint: disable=too-many-arguments
     """Labeling subscriptions based on findings and label configurations.
 
