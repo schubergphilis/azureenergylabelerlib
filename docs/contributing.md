@@ -47,10 +47,10 @@ All checks must pass for the pull request to be accepted.
 uv run python -m unittest
 
 # Run specific test file
-uv run python -m unittest tests.test_oktalib
+uv run python -m unittest tests.test_azureenergylabelerlib
 
 # Run specific test
-uv run python -m unittest tests.test_oktalib.TestSmoke.test_sanity
+uv run python -m unittest tests.test_azureenergylabelerlib.TestAzureEnergyLabelerInit.test_tenant_has_one_subscription
 ```
 
 ### Documentation

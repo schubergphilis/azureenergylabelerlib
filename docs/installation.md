@@ -65,7 +65,7 @@ uv run mypy
 uv run python -m unittest
 
 # Run specific test
-uv run python -m unittest tests.test_oktalib.TestSmoke.test_sanity
+uv run python -m unittest tests.test_azureenergylabelerlib.TestAzureEnergyLabelerInit.test_tenant_has_one_subscription
 ```
 
 **Build:**

@@ -1,67 +1,91 @@
-#!/usr/bin/env python
-# File: test_azureenergylabelerlib.py
-#
-# Copyright 2022 Sayantan Khanra
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-#  of this software and associated documentation files (the "Software"), to
-#  deal in the Software without restriction, including without limitation the
-#  rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-#  sell copies of the Software, and to permit persons to whom the Software is
-#  furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-#  all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-#  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-#  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-#  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-#  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-#  DEALINGS IN THE SOFTWARE.
-#
+"""Tests for azureenergylabelerlib."""
 
-"""
-test_azureenergylabelerlib
-----------------------------------
-Tests for `azureenergylabelerlib` module.
+import unittest
+from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
-.. _Google Python Style Guide:
-   http://google.github.io/styleguide/pyguide.html
+from azureenergylabelerlib import AzureEnergyLabeler
+from azureenergylabelerlib.azureenergylabelerlibexceptions import (
+    InvalidCredentials,
+    InvalidFrameworks,
+)
+from azureenergylabelerlib.configuration import (
+    DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
+    RESOURCE_GROUP_THRESHOLDS,
+    SUBSCRIPTION_THRESHOLDS,
+    TENANT_THRESHOLDS,
+)
+from azureenergylabelerlib.entities import DefenderForCloud, Finding
 
-"""
-
-from betamax.fixtures import unittest
-
-__author__ = """Sayantan Khanra <skhanra@schubergphilis.com>"""
-__docformat__ = """google"""
-__date__ = """22-04-2022"""
-__copyright__ = """Copyright 2022, Sayantan Khanra"""
-__credits__ = ["Sayantan Khanra"]
-__license__ = """MIT"""
-__maintainer__ = """Sayantan Khanra"""
-__email__ = """<skhanra@schubergphilis.com>"""
-__status__ = """Development"""  # "Prototype", "Development", "Production".
+TENANT_ID = "18d9dec0-d762-11ec-9cb5-00155da09878"
+SUBSCRIPTION_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
 
 
-class TestAzureenergylabelerlib(unittest.BetamaxTestCase):
+def _mock_subscription(tenant_id=TENANT_ID, subscription_id=SUBSCRIPTION_ID):
+    return SimpleNamespace(
+        tenant_id=tenant_id,
+        subscription_id=subscription_id,
+        display_name="test-sub",
+        id=f"/subscriptions/{subscription_id}",
+        state="Enabled",
+    )
+
+
+def _build_labeler():
+    """Create an AzureEnergyLabeler with all Azure calls mocked."""
+    mock_credential = MagicMock()
+    sub = _mock_subscription()
+    # SubscriptionClient is imported in two modules, so both references must
+    # be patched.  Using a shared mock avoids duplicating the setup.
+    shared_sub_client = MagicMock()
+    shared_sub_client.return_value.subscriptions.list.return_value = [sub]
+
+    with (
+        patch(
+            "azureenergylabelerlib.azureenergylabelerlib.SubscriptionClient",
+            shared_sub_client,
+        ),
+        patch(
+            "azureenergylabelerlib.entities.SubscriptionClient",
+            shared_sub_client,
+        ),
+    ):
+        labeler = AzureEnergyLabeler(
+            tenant_id=TENANT_ID,
+            credentials=mock_credential,
+        )
+    return labeler
+
+
+class TestAzureEnergyLabelerInit(unittest.TestCase):
+    """Verify AzureEnergyLabeler initialises with correct defaults."""
+
     def setUp(self):
-        """
-        Test set up
+        self.labeler = _build_labeler()
 
-        This is where you can setup things that you use
-        throughout the tests. This method is called
-        before every test.
-        """
-        pass
+    def test_tenant_thresholds_default(self):
+        self.assertEqual(self.labeler.tenant_thresholds, TENANT_THRESHOLDS)
 
-    def tearDown(self):
-        """
-        Test tear down
+    def test_subscription_thresholds_default(self):
+        self.assertEqual(self.labeler.subscription_thresholds, SUBSCRIPTION_THRESHOLDS)
 
-        This is where you should tear down what you've
-        setup in setUp before. This method is called
-        after every test.
-        """
-        pass
+    def test_resource_group_thresholds_default(self):
+        self.assertEqual(
+            self.labeler.resource_group_thresholds, RESOURCE_GROUP_THRESHOLDS
+        )
+
+    def test_matching_frameworks(self):
+        self.assertEqual(
+            set(self.labeler.matching_frameworks),
+            DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
+        )
+
+    def test_tenant_has_one_subscription(self):
+        self.assertEqual(len(self.labeler.tenant.subscriptions), 1)
+
+    def test_denied_resource_group_names_default_empty(self):
+        self.assertEqual(self.labeler.denied_resource_group_names, [])
+
+
+if __name__ == "__main__":
+    unittest.main()
