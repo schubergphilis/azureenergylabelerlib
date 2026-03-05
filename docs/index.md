@@ -11,6 +11,6 @@ A python library that generates energy labels based on findings in Azure subscri
 
 ## Project Information
 
-- **License**: MIT
+- **License**: Apache 
 - **Python Version**: >= 3.12
 - **Source Code**: [GitHub Repository](https://github.com/schubergphilis/azureenergylabelerlib)
