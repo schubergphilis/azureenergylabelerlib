@@ -192,7 +192,7 @@ wheels = [
 
 [[package]]
 name = "azureenergylabelerlib"
-version = "3.3.3"
+version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "azure-cli-core" },
