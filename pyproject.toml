@@ -1,0 +1,74 @@
+[project]
+name = "azureenergylabelerlib"
+version = "3.3.3"
+description = "A python library that generates energy labels based on findings in Azure subscriptions"
+readme = "README.md"
+authors = [
+    {name = "Azure Energy Labeler Library", email = "rbortolameotti@schubergphilis.com"},
+]
+requires-python = ">=3.12"
+dependencies = [
+    "azure-cli-core>=2.53.0",
+    "azure-identity>=1.14.0",
+    "azure-mgmt-resource>=21.2.1,<24.0.0",
+    "azure-mgmt-resourcegraph>=8.0.0",
+    "azure-mgmt-security>=1.0.0",
+    "azure-storage-blob>=12.18.2",
+    "cachetools>=5.3.1",
+    "opnieuw>=1.2.1",
+    "schema>=0.7.5",
+]
+classifiers = [
+    # License
+    "License :: OSI Approved :: Apache Software License",
+    # Python versions supported by the package
+    "Programming Language :: Python :: 3.12",
+]
+
+# click is a transient dependency, but broken beyond version 8.2.1
+# so this is needed until the following issue is fixed:
+# https://github.com/mkdocs/mkdocs/issues/4032
+[dependency-groups]
+dev = [
+    "click<=8.2.1",
+    "mkdocs==1.6.1",
+    "mkdocstrings[python]==0.30.1",
+    "mypy==1.18.2",
+    "ruff==0.13.1",
+    "betamax>=0.9.0",
+    "types-cachetools>=6.2.0.20251022",
+    "mkdocs-mermaid2-plugin>=1.2.3",
+]
+
+[build-system]
+requires = ["uv_build>=0.8.15,<0.10.0"]
+build-backend = "uv_build"
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+# Recommended ignore list for preventing clashes between ruff lint and ruff format.
+ignore = [
+    # indentation-with-invalid-multiple
+    "E111",
+    # indentation-with-invalid-multiple-comment
+    "E114",
+    # over-indented
+    "E117",
+]
+
+[tool.mypy]
+files = ["src/"]
+disallow_untyped_defs = true
