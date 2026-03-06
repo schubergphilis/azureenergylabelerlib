@@ -5,17 +5,12 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from azureenergylabelerlib import AzureEnergyLabeler
-from azureenergylabelerlib.azureenergylabelerlibexceptions import (
-    InvalidCredentials,
-    InvalidFrameworks,
-)
 from azureenergylabelerlib.configuration import (
     DEFAULT_DEFENDER_FOR_CLOUD_FRAMEWORKS,
     RESOURCE_GROUP_THRESHOLDS,
     SUBSCRIPTION_THRESHOLDS,
     TENANT_THRESHOLDS,
 )
-from azureenergylabelerlib.entities import DefenderForCloud, Finding
 
 TENANT_ID = "18d9dec0-d762-11ec-9cb5-00155da09878"
 SUBSCRIPTION_ID = "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
