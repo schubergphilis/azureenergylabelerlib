@@ -1,6 +1,6 @@
 [project]
 name = "azureenergylabelerlib"
-version = "3.3.3"
+version = "3.3.4"
 description = "A python library that generates energy labels based on findings in Azure subscriptions"
 readme = "README.md"
 authors = [
