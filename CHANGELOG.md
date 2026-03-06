@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.0.1](https://github.com/schubergphilis/azureenergylabelerlib/compare/v4.0.0...v4.0.1) (2026-03-06)
+
+
+### Bug Fixes
+
+* expose functions and parameters that are needed when using the library ([e98e41d](https://github.com/schubergphilis/azureenergylabelerlib/commit/e98e41dbecd111d15dc77f316446db8d5025ca10))
+* expose more functions and parameters ([31c6ccd](https://github.com/schubergphilis/azureenergylabelerlib/commit/31c6ccd22a1c40491fc992f6d0edd0f4a487dac1))
+* expose more functions and parameters ([31c6ccd](https://github.com/schubergphilis/azureenergylabelerlib/commit/31c6ccd22a1c40491fc992f6d0edd0f4a487dac1))
+
 ## [4.0.0](https://github.com/schubergphilis/azureenergylabelerlib/compare/v3.3.4...v4.0.0) (2026-03-06)
 
 
